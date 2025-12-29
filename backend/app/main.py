@@ -86,14 +86,10 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# CORS middleware
+# CORS middleware - allow all origins in production for now
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://frontend:3000",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -111,5 +107,11 @@ async def root():
         "version": settings.app_version,
         "description": "Legal Cartography Platform",
         "docs": "/docs",
-        "health": "/api/health",
+        "health": "/health",
     }
+
+
+@app.get("/health")
+async def health():
+    """Simple health check endpoint for Railway."""
+    return {"status": "healthy"}
