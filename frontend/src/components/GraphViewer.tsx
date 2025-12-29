@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { ZoomIn, ZoomOut, Maximize2, RefreshCw, X, ArrowRight, ArrowLeft, FileText, Scale, Building2, Gavel, ScrollText, Loader2 } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, RefreshCw, X, ArrowRight, ArrowLeft, FileText, Scale, Building2, Gavel, ScrollText, Loader2, ChevronRight, Link2 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 
 // Dynamically import force graph to avoid SSR issues
@@ -110,12 +110,21 @@ const RELATIONSHIP_LABELS: Record<string, string> = {
   CONSTRAINS: 'Constrains',
 }
 
+interface AuthorityChainNode {
+  id: string
+  title: string
+  citation?: string
+  type: string
+}
+
 export function GraphViewer() {
   const [graphData, setGraphData] = useState<GraphData>(DEMO_DATA)
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null)
   const [nodeDetails, setNodeDetails] = useState<NodeDetails | null>(null)
   const [loadingDetails, setLoadingDetails] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [authorityChain, setAuthorityChain] = useState<AuthorityChainNode[]>([])
+  const [loadingChain, setLoadingChain] = useState(false)
   const graphRef = useRef<any>(null)
 
   const fetchGraphData = async () => {
@@ -155,6 +164,69 @@ export function GraphViewer() {
     }
   }
 
+  const fetchAuthorityChain = async (nodeId: string, nodeType: string) => {
+    // Only fetch authority chain for regulations and guidance
+    if (!['Regulation', 'Guidance'].includes(nodeType)) {
+      setAuthorityChain([])
+      return
+    }
+
+    setLoadingChain(true)
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/graph/nodes/${nodeId}/authority-chain`)
+      if (res.ok) {
+        const data = await res.json()
+        setAuthorityChain(data.authority_chain || [])
+      } else {
+        // Generate demo authority chain based on graph links
+        const chain = buildDemoAuthorityChain(nodeId)
+        setAuthorityChain(chain)
+      }
+    } catch (err) {
+      // Generate demo authority chain based on graph links
+      const chain = buildDemoAuthorityChain(nodeId)
+      setAuthorityChain(chain)
+    } finally {
+      setLoadingChain(false)
+    }
+  }
+
+  // Build authority chain from demo data by traversing AUTHORIZES relationships backwards
+  const buildDemoAuthorityChain = (nodeId: string): AuthorityChainNode[] => {
+    const chain: AuthorityChainNode[] = []
+    const visited = new Set<string>()
+
+    const findAuthorities = (currentId: string) => {
+      if (visited.has(currentId)) return
+      visited.add(currentId)
+
+      // Find all nodes that AUTHORIZE this node
+      const authorizingLinks = graphData.links.filter(
+        link => {
+          const targetId = typeof link.target === 'string' ? link.target : (link.target as any).id
+          return targetId === currentId && link.type === 'AUTHORIZES'
+        }
+      )
+
+      for (const link of authorizingLinks) {
+        const sourceId = typeof link.source === 'string' ? link.source : (link.source as any).id
+        const sourceNode = graphData.nodes.find(n => n.id === sourceId)
+        if (sourceNode) {
+          chain.unshift({
+            id: sourceNode.id,
+            title: sourceNode.title,
+            citation: sourceNode.citation,
+            type: sourceNode.type,
+          })
+          findAuthorities(sourceId)
+        }
+      }
+    }
+
+    findAuthorities(nodeId)
+    return chain
+  }
+
   useEffect(() => {
     fetchGraphData()
   }, [])
@@ -162,12 +234,13 @@ export function GraphViewer() {
   const handleNodeClick = useCallback((node: any) => {
     setSelectedNode(node as GraphNode)
     fetchNodeDetails(node.id)
+    fetchAuthorityChain(node.id, node.type)
     // Center on node
     if (graphRef.current) {
       graphRef.current.centerAt(node.x, node.y, 1000)
       graphRef.current.zoom(2, 1000)
     }
-  }, [])
+  }, [graphData])
 
   const handleRelationshipNodeClick = (nodeId: string) => {
     // Find the node in graph data and select it
@@ -175,6 +248,7 @@ export function GraphViewer() {
     if (node) {
       setSelectedNode(node)
       fetchNodeDetails(nodeId)
+      fetchAuthorityChain(nodeId, node.type)
       // Center on the node if it has coordinates
       if (graphRef.current && (node as any).x !== undefined) {
         graphRef.current.centerAt((node as any).x, (node as any).y, 1000)
@@ -204,6 +278,7 @@ export function GraphViewer() {
   const handleCloseDetails = () => {
     setSelectedNode(null)
     setNodeDetails(null)
+    setAuthorityChain([])
   }
 
   // Group relationships by type
@@ -355,6 +430,56 @@ export function GraphViewer() {
               <X className="w-4 h-4" />
             </button>
           </div>
+
+          {/* Authority Chain */}
+          {(authorityChain.length > 0 || loadingChain) && (
+            <div className="px-4 py-3 border-b border-vulcan-700/50 bg-vulcan-900/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Link2 className="w-3.5 h-3.5 text-accent" />
+                <h5 className="text-xs font-semibold text-vulcan-400 uppercase tracking-wide">Authority Chain</h5>
+              </div>
+              {loadingChain ? (
+                <div className="flex items-center gap-2 text-vulcan-500 text-sm">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Loading...</span>
+                </div>
+              ) : (
+                <div className="flex items-center flex-wrap gap-1">
+                  {authorityChain.map((node, idx) => (
+                    <div key={node.id} className="flex items-center">
+                      <button
+                        onClick={() => handleRelationshipNodeClick(node.id)}
+                        className="px-2 py-1 rounded text-xs font-medium transition-colors hover:bg-vulcan-700"
+                        style={{
+                          backgroundColor: `${NODE_COLORS[node.type]}15`,
+                          color: NODE_COLORS[node.type],
+                        }}
+                      >
+                        {node.citation || node.title.substring(0, 20)}
+                      </button>
+                      {idx < authorityChain.length - 1 && (
+                        <ChevronRight className="w-3.5 h-3.5 text-vulcan-600 mx-0.5" />
+                      )}
+                    </div>
+                  ))}
+                  {authorityChain.length > 0 && (
+                    <>
+                      <ChevronRight className="w-3.5 h-3.5 text-vulcan-600 mx-0.5" />
+                      <span
+                        className="px-2 py-1 rounded text-xs font-medium border-2"
+                        style={{
+                          borderColor: NODE_COLORS[selectedNode.type],
+                          color: NODE_COLORS[selectedNode.type],
+                        }}
+                      >
+                        {selectedNode.citation || selectedNode.title.substring(0, 20)}
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto">

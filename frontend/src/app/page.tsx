@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Search,
@@ -11,14 +12,52 @@ import {
   Sparkles,
   Scale,
   Building2,
+  MessageSquare,
+  Zap,
 } from 'lucide-react'
 
+const DEMO_QUERIES = [
+  {
+    query: "What are the FOIA disclosure requirements?",
+    label: "FOIA Requirements",
+    icon: FileText,
+  },
+  {
+    query: "Explain FERPA student privacy protections",
+    label: "FERPA Privacy",
+    icon: Shield,
+  },
+  {
+    query: "What is the Administrative Procedure Act rulemaking process?",
+    label: "APA Rulemaking",
+    icon: Scale,
+  },
+  {
+    query: "How does the Privacy Act protect personal information?",
+    label: "Privacy Act",
+    icon: Building2,
+  },
+]
+
 export default function Home() {
+  const router = useRouter()
   const [stats, setStats] = useState({
     documents: 0,
     relationships: 0,
     agencies: 0,
   })
+  const [demoQuery, setDemoQuery] = useState('')
+
+  const handleDemoQuery = (query: string) => {
+    router.push(`/query?q=${encodeURIComponent(query)}`)
+  }
+
+  const handleQuickSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (demoQuery.trim()) {
+      router.push(`/query?q=${encodeURIComponent(demoQuery)}`)
+    }
+  }
 
   useEffect(() => {
     // Fetch stats from API
@@ -65,22 +104,100 @@ export default function Home() {
 
         {/* Animated connection lines */}
         <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
-          <line x1="10%" y1="20%" x2="30%" y2="35%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.2" />
-          <line x1="30%" y1="35%" x2="50%" y2="25%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.2" />
-          <line x1="50%" y1="25%" x2="70%" y2="40%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.2" />
-          <line x1="70%" y1="40%" x2="90%" y2="30%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.2" />
-          <line x1="20%" y1="60%" x2="40%" y2="70%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.15" />
-          <line x1="40%" y1="70%" x2="60%" y2="65%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.15" />
-          <line x1="60%" y1="65%" x2="80%" y2="75%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.15" />
-          <circle cx="10%" cy="20%" r="3" fill="#3b82f6" opacity="0.4" />
-          <circle cx="30%" cy="35%" r="3" fill="#3b82f6" opacity="0.4" />
-          <circle cx="50%" cy="25%" r="3" fill="#3b82f6" opacity="0.4" />
-          <circle cx="70%" cy="40%" r="3" fill="#3b82f6" opacity="0.4" />
-          <circle cx="90%" cy="30%" r="3" fill="#3b82f6" opacity="0.4" />
-          <circle cx="20%" cy="60%" r="2" fill="#3b82f6" opacity="0.3" />
-          <circle cx="40%" cy="70%" r="2" fill="#3b82f6" opacity="0.3" />
-          <circle cx="60%" cy="65%" r="2" fill="#3b82f6" opacity="0.3" />
-          <circle cx="80%" cy="75%" r="2" fill="#3b82f6" opacity="0.3" />
+          <defs>
+            {/* Animated gradient for data flow effect */}
+            <linearGradient id="flowGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0">
+                <animate attributeName="offset" values="-0.5;1" dur="3s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.6">
+                <animate attributeName="offset" values="0;1.5" dur="3s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0">
+                <animate attributeName="offset" values="0.5;2" dur="3s" repeatCount="indefinite" />
+              </stop>
+            </linearGradient>
+            <linearGradient id="flowGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0">
+                <animate attributeName="offset" values="-0.5;1" dur="4s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.5">
+                <animate attributeName="offset" values="0;1.5" dur="4s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0">
+                <animate attributeName="offset" values="0.5;2" dur="4s" repeatCount="indefinite" />
+              </stop>
+            </linearGradient>
+          </defs>
+
+          {/* Static connection lines */}
+          <line x1="10%" y1="20%" x2="30%" y2="35%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.15" />
+          <line x1="30%" y1="35%" x2="50%" y2="25%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.15" />
+          <line x1="50%" y1="25%" x2="70%" y2="40%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.15" />
+          <line x1="70%" y1="40%" x2="90%" y2="30%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.15" />
+          <line x1="20%" y1="60%" x2="40%" y2="70%" stroke="#8b5cf6" strokeWidth="0.5" opacity="0.12" />
+          <line x1="40%" y1="70%" x2="60%" y2="65%" stroke="#8b5cf6" strokeWidth="0.5" opacity="0.12" />
+          <line x1="60%" y1="65%" x2="80%" y2="75%" stroke="#8b5cf6" strokeWidth="0.5" opacity="0.12" />
+          <line x1="30%" y1="35%" x2="40%" y2="70%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.1" />
+          <line x1="50%" y1="25%" x2="60%" y2="65%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.1" />
+
+          {/* Animated flow lines */}
+          <line x1="10%" y1="20%" x2="30%" y2="35%" stroke="url(#flowGradient1)" strokeWidth="2" />
+          <line x1="30%" y1="35%" x2="50%" y2="25%" stroke="url(#flowGradient1)" strokeWidth="2" />
+          <line x1="50%" y1="25%" x2="70%" y2="40%" stroke="url(#flowGradient1)" strokeWidth="2" />
+          <line x1="20%" y1="60%" x2="40%" y2="70%" stroke="url(#flowGradient2)" strokeWidth="2" />
+          <line x1="40%" y1="70%" x2="60%" y2="65%" stroke="url(#flowGradient2)" strokeWidth="2" />
+
+          {/* Pulsing nodes - primary row */}
+          <circle cx="10%" cy="20%" r="4" fill="#3b82f6" opacity="0.6">
+            <animate attributeName="r" values="4;6;4" dur="2s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.6;0.3;0.6" dur="2s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="30%" cy="35%" r="5" fill="#3b82f6" opacity="0.7">
+            <animate attributeName="r" values="5;7;5" dur="2.5s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.7;0.4;0.7" dur="2.5s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="50%" cy="25%" r="4" fill="#3b82f6" opacity="0.5">
+            <animate attributeName="r" values="4;6;4" dur="3s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.5;0.3;0.5" dur="3s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="70%" cy="40%" r="6" fill="#3b82f6" opacity="0.6">
+            <animate attributeName="r" values="6;8;6" dur="2.2s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.6;0.35;0.6" dur="2.2s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="90%" cy="30%" r="4" fill="#3b82f6" opacity="0.4">
+            <animate attributeName="r" values="4;5;4" dur="2.8s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.4;0.25;0.4" dur="2.8s" repeatCount="indefinite" />
+          </circle>
+
+          {/* Pulsing nodes - secondary row */}
+          <circle cx="20%" cy="60%" r="3" fill="#8b5cf6" opacity="0.5">
+            <animate attributeName="r" values="3;5;3" dur="2.7s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.5;0.3;0.5" dur="2.7s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="40%" cy="70%" r="4" fill="#8b5cf6" opacity="0.6">
+            <animate attributeName="r" values="4;6;4" dur="2.3s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.6;0.35;0.6" dur="2.3s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="60%" cy="65%" r="3" fill="#8b5cf6" opacity="0.45">
+            <animate attributeName="r" values="3;5;3" dur="3.1s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.45;0.25;0.45" dur="3.1s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="80%" cy="75%" r="3" fill="#8b5cf6" opacity="0.4">
+            <animate attributeName="r" values="3;4;3" dur="2.9s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.4;0.25;0.4" dur="2.9s" repeatCount="indefinite" />
+          </circle>
+
+          {/* Center glow effect */}
+          <circle cx="50%" cy="45%" r="100" fill="url(#centerGlow)" opacity="0.15">
+            <animate attributeName="r" values="100;120;100" dur="4s" repeatCount="indefinite" />
+          </circle>
+          <defs>
+            <radialGradient id="centerGlow">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </radialGradient>
+          </defs>
         </svg>
       </div>
 
@@ -188,6 +305,63 @@ export default function Home() {
                 <span>Demo mode active</span>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Try It Now Section */}
+      <section className="relative py-16 px-6 border-t border-vulcan-800 bg-vulcan-850/50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-sm font-medium mb-4">
+              <Zap className="w-4 h-4" />
+              Try it now
+            </div>
+            <h2 className="text-2xl md:text-3xl font-semibold text-white mb-3">
+              Query the legal corpus
+            </h2>
+            <p className="text-vulcan-400 max-w-xl mx-auto">
+              Ask questions in plain English and get AI-powered answers with citations from federal statutes and regulations.
+            </p>
+          </div>
+
+          {/* Quick Search Bar */}
+          <form onSubmit={handleQuickSearch} className="max-w-2xl mx-auto mb-8">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-vulcan-500" />
+              <input
+                type="text"
+                value={demoQuery}
+                onChange={(e) => setDemoQuery(e.target.value)}
+                placeholder="Ask a legal question..."
+                className="w-full pl-12 pr-32 py-4 bg-vulcan-900 border border-vulcan-600 rounded-xl text-white placeholder-vulcan-500 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
+              />
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-5 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                Query
+              </button>
+            </div>
+          </form>
+
+          {/* Demo Query Buttons */}
+          <div className="flex flex-wrap justify-center gap-3">
+            <span className="text-vulcan-500 text-sm self-center mr-2">Try:</span>
+            {DEMO_QUERIES.map((demo) => {
+              const Icon = demo.icon
+              return (
+                <button
+                  key={demo.label}
+                  onClick={() => handleDemoQuery(demo.query)}
+                  className="group flex items-center gap-2 px-4 py-2 bg-vulcan-800/50 hover:bg-vulcan-800 border border-vulcan-700 hover:border-accent/50 rounded-lg text-vulcan-300 hover:text-white transition-all text-sm"
+                >
+                  <Icon className="w-4 h-4 text-vulcan-500 group-hover:text-accent transition-colors" />
+                  {demo.label}
+                </button>
+              )
+            })}
           </div>
         </div>
       </section>
