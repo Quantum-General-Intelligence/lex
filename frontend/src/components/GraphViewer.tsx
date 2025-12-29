@@ -80,6 +80,109 @@ const DEMO_DATA: GraphData = {
   ],
 }
 
+// Demo node details
+const DEMO_NODE_DETAILS: Record<string, Omit<NodeDetails, 'relationships'>> = {
+  '1': {
+    id: '1',
+    type: 'Statute',
+    title: 'Administrative Procedure Act',
+    citation: '5 U.S.C. § 551-559',
+    jurisdiction: 'federal',
+    year: 1946,
+    summary: 'The APA governs the process by which federal agencies develop and issue regulations. It includes requirements for publishing notices of proposed and final rulemaking in the Federal Register, and provides opportunities for the public to comment on notices of proposed rulemaking.',
+    text: 'For the purpose of this subchapter—(1) "agency" means each authority of the Government of the United States, whether or not it is within or subject to review by another agency...',
+  },
+  '2': {
+    id: '2',
+    type: 'Statute',
+    title: 'Freedom of Information Act',
+    citation: '5 U.S.C. § 552',
+    jurisdiction: 'federal',
+    year: 1967,
+    summary: 'FOIA provides the public the right to request access to records from any federal agency. Federal agencies are required to disclose any information requested under FOIA unless it falls under one of nine exemptions.',
+    text: 'Each agency shall make available to the public information as follows: (1) Each agency shall separately state and currently publish in the Federal Register for the guidance of the public...',
+  },
+  '3': {
+    id: '3',
+    type: 'Statute',
+    title: 'Privacy Act of 1974',
+    citation: '5 U.S.C. § 552a',
+    jurisdiction: 'federal',
+    year: 1974,
+    summary: 'The Privacy Act establishes a code of fair information practices that governs the collection, maintenance, use, and dissemination of information about individuals maintained in systems of records by federal agencies.',
+    text: 'Each agency that maintains a system of records shall maintain in its records only such information about an individual as is relevant and necessary to accomplish a purpose of the agency...',
+  },
+  '4': {
+    id: '4',
+    type: 'Regulation',
+    title: 'OMB Circular A-130',
+    citation: 'OMB A-130',
+    jurisdiction: 'federal',
+    agency: 'Office of Management and Budget',
+    year: 2016,
+    summary: 'Establishes general policy for the planning, budgeting, governance, acquisition, and management of federal information, personnel, equipment, funds, IT resources and supporting infrastructure.',
+    text: 'This Circular establishes policy for the management of Federal information resources. OMB includes procedural and analytic guidelines for implementing specific aspects of these policies as appendices.',
+  },
+  '5': {
+    id: '5',
+    type: 'Guidance',
+    title: 'NIST Special Publication 800-53',
+    citation: 'NIST 800-53',
+    jurisdiction: 'federal',
+    agency: 'National Institute of Standards and Technology',
+    year: 2020,
+    summary: 'Provides a catalog of security and privacy controls for federal information systems and organizations to protect organizational operations, assets, individuals, and the Nation from a diverse set of threats.',
+  },
+  '6': {
+    id: '6',
+    type: 'Statute',
+    title: 'Family Educational Rights and Privacy Act',
+    citation: '20 U.S.C. § 1232g',
+    jurisdiction: 'federal',
+    year: 1974,
+    summary: 'FERPA protects the privacy of student education records. It applies to all schools that receive funds under an applicable program of the U.S. Department of Education.',
+    text: 'No funds shall be made available under any applicable program to any educational agency or institution which has a policy or practice of permitting the release of education records...',
+  },
+  '7': {
+    id: '7',
+    type: 'Agency',
+    title: 'U.S. Department of Education',
+    jurisdiction: 'federal',
+    abbreviation: 'ED',
+    year: 1979,
+    summary: 'The Department of Education is the agency of the federal government that establishes policy for, administers and coordinates most federal assistance to education.',
+  },
+  '8': {
+    id: '8',
+    type: 'Regulation',
+    title: 'FERPA Regulations',
+    citation: '34 CFR Part 99',
+    jurisdiction: 'federal',
+    agency: 'Department of Education',
+    year: 1988,
+    summary: 'Implements FERPA requirements. Defines education records, establishes procedures for access and amendment, and specifies conditions for disclosure of personally identifiable information.',
+  },
+  '9': {
+    id: '9',
+    type: 'Regulation',
+    title: 'Student Privacy Protection Rule',
+    jurisdiction: 'federal',
+    agency: 'Department of Education',
+    year: 2011,
+    summary: 'Strengthens FERPA protections by limiting the circumstances under which student education records can be disclosed without consent.',
+  },
+  '10': {
+    id: '10',
+    type: 'Statute',
+    title: 'Health Insurance Portability and Accountability Act',
+    citation: '42 U.S.C. § 1320d',
+    jurisdiction: 'federal',
+    year: 1996,
+    summary: 'HIPAA establishes national standards to protect sensitive patient health information from being disclosed without patient consent or knowledge.',
+    text: 'The Secretary shall adopt standards for transactions, and data elements for such transactions, to enable health information to be exchanged electronically...',
+  },
+}
+
 const NODE_COLORS: Record<string, string> = {
   Statute: '#3b82f6',      // Blue
   Regulation: '#8b5cf6',   // Purple
@@ -155,13 +258,61 @@ export function GraphViewer() {
       if (res.ok) {
         const data = await res.json()
         setNodeDetails(data)
+        return
       }
     } catch (err) {
-      console.log('Could not fetch node details')
-      setNodeDetails(null)
-    } finally {
-      setLoadingDetails(false)
+      console.log('Using demo node details')
     }
+
+    // Fallback to demo data
+    const demoDetails = DEMO_NODE_DETAILS[nodeId]
+    if (demoDetails) {
+      // Build relationships from DEMO_DATA links
+      const relationships: NodeDetails['relationships'] = []
+
+      for (const link of DEMO_DATA.links) {
+        const sourceId = typeof link.source === 'string' ? link.source : (link.source as any).id
+        const targetId = typeof link.target === 'string' ? link.target : (link.target as any).id
+
+        if (sourceId === nodeId) {
+          const targetNode = DEMO_DATA.nodes.find(n => n.id === targetId)
+          if (targetNode) {
+            relationships.push({
+              type: link.type,
+              direction: 'outgoing',
+              node: {
+                id: targetNode.id,
+                title: targetNode.title,
+                citation: targetNode.citation,
+                type: targetNode.type,
+              },
+            })
+          }
+        } else if (targetId === nodeId) {
+          const sourceNode = DEMO_DATA.nodes.find(n => n.id === sourceId)
+          if (sourceNode) {
+            relationships.push({
+              type: link.type,
+              direction: 'incoming',
+              node: {
+                id: sourceNode.id,
+                title: sourceNode.title,
+                citation: sourceNode.citation,
+                type: sourceNode.type,
+              },
+            })
+          }
+        }
+      }
+
+      setNodeDetails({
+        ...demoDetails,
+        relationships,
+      })
+    } else {
+      setNodeDetails(null)
+    }
+    setLoadingDetails(false)
   }
 
   const fetchAuthorityChain = async (nodeId: string, nodeType: string) => {
@@ -336,7 +487,7 @@ export function GraphViewer() {
         </div>
 
         {/* Graph */}
-        <div className="graph-container h-[500px] relative rounded-xl overflow-hidden border border-vulcan-700/50 bg-vulcan-900">
+        <div className="graph-container h-[calc(100vh-320px)] min-h-[400px] max-h-[700px] relative rounded-xl overflow-hidden border border-vulcan-700/50 bg-vulcan-900">
           <ForceGraph2D
             ref={graphRef}
             graphData={graphData}
@@ -386,7 +537,7 @@ export function GraphViewer() {
 
       {/* Details Panel */}
       {selectedNode && (
-        <div className="w-[40%] min-w-[350px] bg-vulcan-800/50 backdrop-blur-sm rounded-xl border border-vulcan-700/50 overflow-hidden flex flex-col max-h-[620px]">
+        <div className="w-[40%] min-w-[350px] bg-vulcan-800/50 backdrop-blur-sm rounded-xl border border-vulcan-700/50 overflow-hidden flex flex-col h-[calc(100vh-320px)] min-h-[400px] max-h-[700px]">
           {/* Header */}
           <div className="p-4 border-b border-vulcan-700/50 flex items-start justify-between">
             <div className="flex items-start gap-3">
