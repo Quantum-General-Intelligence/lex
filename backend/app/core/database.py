@@ -16,24 +16,49 @@ class Base(DeclarativeBase):
     pass
 
 
-# PostgreSQL Async Engine
-engine = create_async_engine(
-    settings.database_url.replace("postgresql://", "postgresql+asyncpg://"),
-    echo=settings.debug,
-    pool_size=5,
-    max_overflow=10,
-)
+# PostgreSQL Async Engine - created lazily to avoid startup failures
+_engine = None
+_async_session_local = None
 
-AsyncSessionLocal = async_sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
+
+def get_engine():
+    """Get or create the database engine lazily."""
+    global _engine
+    if _engine is None:
+        try:
+            _engine = create_async_engine(
+                settings.database_url.replace("postgresql://", "postgresql+asyncpg://"),
+                echo=settings.debug,
+                pool_size=5,
+                max_overflow=10,
+            )
+        except Exception as e:
+            print(f"Failed to create database engine: {e}")
+            return None
+    return _engine
+
+
+def get_async_session_local():
+    """Get or create the async session factory lazily."""
+    global _async_session_local
+    engine = get_engine()
+    if engine is None:
+        return None
+    if _async_session_local is None:
+        _async_session_local = async_sessionmaker(
+            engine,
+            class_=AsyncSession,
+            expire_on_commit=False,
+        )
+    return _async_session_local
 
 
 async def get_db() -> AsyncSession:
     """Dependency for getting async database sessions."""
-    async with AsyncSessionLocal() as session:
+    session_local = get_async_session_local()
+    if session_local is None:
+        raise Exception("Database not available")
+    async with session_local() as session:
         try:
             yield session
             await session.commit()
@@ -50,12 +75,18 @@ class Neo4jConnection:
 
     def __init__(self):
         self._driver = None
+        self._connected = False
 
     async def connect(self):
-        self._driver = AsyncGraphDatabase.driver(
-            settings.neo4j_uri,
-            auth=(settings.neo4j_user, settings.neo4j_password),
-        )
+        try:
+            self._driver = AsyncGraphDatabase.driver(
+                settings.neo4j_uri,
+                auth=(settings.neo4j_user, settings.neo4j_password),
+            )
+            self._connected = True
+        except Exception as e:
+            print(f"Neo4j connection failed: {e}")
+            self._connected = False
 
     async def close(self):
         if self._driver:
@@ -65,6 +96,8 @@ class Neo4jConnection:
     async def session(self):
         if not self._driver:
             await self.connect()
+        if not self._connected or not self._driver:
+            raise Exception("Neo4j not available")
         async with self._driver.session() as session:
             yield session
 
@@ -87,11 +120,15 @@ async def get_neo4j():
 # ChromaDB Client
 def get_chroma_client():
     """Get ChromaDB client."""
-    return chromadb.HttpClient(
-        host=settings.chroma_host,
-        port=settings.chroma_port,
-        settings=ChromaSettings(anonymized_telemetry=False),
-    )
+    try:
+        return chromadb.HttpClient(
+            host=settings.chroma_host,
+            port=settings.chroma_port,
+            settings=ChromaSettings(anonymized_telemetry=False),
+        )
+    except Exception as e:
+        print(f"ChromaDB connection failed: {e}")
+        return None
 
 
 # Redis Client
@@ -102,21 +139,35 @@ async def get_redis():
     """Get Redis client."""
     global redis_client
     if redis_client is None:
-        redis_client = redis.from_url(settings.redis_url, decode_responses=True)
+        try:
+            redis_client = redis.from_url(settings.redis_url, decode_responses=True)
+        except Exception as e:
+            print(f"Redis connection failed: {e}")
+            return None
     return redis_client
 
 
 async def init_databases():
-    """Initialize all database connections."""
+    """Initialize all database connections. Fails gracefully if databases unavailable."""
     # Create PostgreSQL tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    engine = get_engine()
+    if engine:
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+            print("PostgreSQL connected successfully")
+        except Exception as e:
+            print(f"PostgreSQL connection failed (ok for demo): {e}")
 
     # Connect to Neo4j
-    await neo4j_conn.connect()
-
-    # Initialize Neo4j schema
-    await init_neo4j_schema()
+    try:
+        await neo4j_conn.connect()
+        if neo4j_conn._connected:
+            # Initialize Neo4j schema
+            await init_neo4j_schema()
+            print("Neo4j connected successfully")
+    except Exception as e:
+        print(f"Neo4j connection failed (ok for demo): {e}")
 
 
 async def init_neo4j_schema():
@@ -156,4 +207,6 @@ async def close_databases():
     await neo4j_conn.close()
     if redis_client:
         await redis_client.close()
-    await engine.dispose()
+    engine = get_engine()
+    if engine:
+        await engine.dispose()
