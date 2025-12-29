@@ -445,9 +445,9 @@ export function GraphViewer() {
   const NodeIcon = selectedNode ? NODE_ICONS[selectedNode.type] || FileText : FileText
 
   return (
-    <div className="flex gap-4">
+    <div className="flex gap-4 w-full">
       {/* Graph Container */}
-      <div className={`flex-1 space-y-4 ${selectedNode ? 'max-w-[60%]' : ''}`}>
+      <div className={`flex-1 min-w-0 space-y-4 ${selectedNode ? 'max-w-[60%]' : ''}`}>
         {/* Controls */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
