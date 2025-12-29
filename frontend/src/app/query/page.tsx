@@ -14,7 +14,7 @@ export default function QueryPage() {
               <Search className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-slate-900">Justinian</h1>
+              <h1 className="text-xl font-semibold text-slate-900">Regulatory Query</h1>
               <p className="text-sm text-slate-500">
                 AI-powered regulatory query engine
               </p>

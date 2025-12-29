@@ -14,7 +14,7 @@ export default function GraphPage() {
               <GitBranch className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-slate-900">Minerva</h1>
+              <h1 className="text-xl font-semibold text-slate-900">Knowledge Graph</h1>
               <p className="text-sm text-slate-500">
                 Legal knowledge graph explorer
               </p>

@@ -11,7 +11,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Vulcan - Regulatory Operating System',
+  title: 'Lex - Legal Intelligence Platform',
   description: 'AI-powered legal cartography for regulatory analysis, compliance, and policy research',
 }
 

@@ -19,7 +19,7 @@ export default function SettingsPage() {
             <div>
               <h1 className="text-xl font-semibold text-slate-900">Settings</h1>
               <p className="text-sm text-slate-500">
-                Configure your Vulcan instance
+                Configure your Lex instance
               </p>
             </div>
           </div>
@@ -145,13 +145,12 @@ export default function SettingsPage() {
                 <Flame className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="font-semibold text-slate-900">Vulcan</h2>
-                <p className="text-xs text-slate-500">Regulatory Operating System</p>
+                <h2 className="font-semibold text-slate-900">Lex</h2>
+                <p className="text-xs text-slate-500">Legal Intelligence Platform</p>
               </div>
             </div>
             <p className="text-xs text-slate-500">
               Intelligent legal cartography for mapping American laws, regulations, and court cases.
-              Built by Vulcan Technologies.
             </p>
           </div>
         </div>

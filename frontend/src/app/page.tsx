@@ -73,7 +73,7 @@ export default function Home() {
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
                   <Flame className="w-6 h-6 text-white" />
                 </div>
-                Welcome to Vulcan
+                Welcome to Lex
               </h1>
               <p className="text-slate-500 mt-1">
                 Intelligent Legal Cartography - Map the American Legal System
@@ -132,21 +132,21 @@ export default function Home() {
             <ModuleCard
               href="/query"
               icon={Search}
-              name="Justinian"
+              name="Regulatory Query"
               description="Query regulations with AI-powered search. Get answers with citations and confidence scores."
               color="blue"
             />
             <ModuleCard
               href="/graph"
               icon={GitBranch}
-              name="Minerva"
+              name="Knowledge Graph"
               description="Explore the knowledge graph. Visualize relationships between statutes, regulations, and agencies."
               color="purple"
             />
             <ModuleCard
               href="/documents"
               icon={FileText}
-              name="Solon"
+              name="Document Library"
               description="Browse and manage your legal document library. Search, filter, and analyze documents."
               color="emerald"
             />
@@ -236,7 +236,7 @@ export default function Home() {
             <div>
               <h3 className="text-lg font-semibold mb-2">Legal Cartography</h3>
               <p className="text-slate-300 text-sm max-w-xl">
-                Vulcan maps American laws, regulations, and court cases to help government agencies
+                Lex maps American laws, regulations, and court cases to help government agencies
                 and businesses automate regulatory analysis. Draft lawful regulations, respond to
                 public comments, and generate cost-benefit analyses.
               </p>

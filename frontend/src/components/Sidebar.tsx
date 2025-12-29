@@ -17,13 +17,12 @@ import {
   LayoutDashboard,
 } from 'lucide-react'
 
-// Vulcan product modules - named after Roman/Classical figures
-// Justinian (regulatory), Minerva (policy research), Solon (legislative)
+// Navigation modules
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard, description: 'Overview & metrics' },
-  { name: 'Justinian', href: '/query', icon: Search, description: 'Regulatory query' },
-  { name: 'Minerva', href: '/graph', icon: GitBranch, description: 'Knowledge graph' },
-  { name: 'Solon', href: '/documents', icon: FileText, description: 'Document library' },
+  { name: 'Query', href: '/query', icon: Search, description: 'Regulatory query' },
+  { name: 'Graph', href: '/graph', icon: GitBranch, description: 'Knowledge graph' },
+  { name: 'Documents', href: '/documents', icon: FileText, description: 'Document library' },
   { name: 'Compliance', href: '/compliance', icon: Shield, description: 'Policy checker' },
   { name: 'Comments', href: '/comments', icon: MessageSquare, description: 'Public comments' },
   { name: 'Ingest', href: '/upload', icon: Upload, description: 'Upload documents' },
@@ -49,8 +48,8 @@ export function Sidebar() {
               <Flame className="w-5 h-5 text-white" />
             </div>
             <div>
-              <span className="text-lg font-semibold tracking-tight">Vulcan</span>
-              <span className="text-[10px] text-slate-500 block -mt-0.5">Regulatory OS</span>
+              <span className="text-lg font-semibold tracking-tight">Lex</span>
+              <span className="text-[10px] text-slate-500 block -mt-0.5">Legal Intelligence</span>
             </div>
           </div>
         )}
