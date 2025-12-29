@@ -483,5 +483,13 @@ class IngestionService:
         return structure
 
 
-# Singleton instance
-ingestion_service = IngestionService()
+# Lazy singleton instance
+_ingestion_service = None
+
+
+def get_ingestion_service():
+    """Get or create the ingestion service lazily."""
+    global _ingestion_service
+    if _ingestion_service is None:
+        _ingestion_service = IngestionService()
+    return _ingestion_service

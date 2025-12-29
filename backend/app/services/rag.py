@@ -13,11 +13,34 @@ class RAGService:
     """Service for RAG operations over the legal corpus."""
 
     def __init__(self):
-        self.chroma = get_chroma_client()
-        self.collection = self.chroma.get_or_create_collection(
-            name="legal_documents",
-            metadata={"description": "Legal document chunks for RAG"},
-        )
+        self._chroma = None
+        self._collection = None
+        self._available = None
+
+    @property
+    def chroma(self):
+        if self._chroma is None:
+            self._chroma = get_chroma_client()
+        return self._chroma
+
+    @property
+    def collection(self):
+        if self._collection is None and self.chroma is not None:
+            try:
+                self._collection = self.chroma.get_or_create_collection(
+                    name="legal_documents",
+                    metadata={"description": "Legal document chunks for RAG"},
+                )
+            except Exception as e:
+                print(f"Failed to get ChromaDB collection: {e}")
+        return self._collection
+
+    @property
+    def available(self):
+        """Check if RAG service is available."""
+        if self._available is None:
+            self._available = self.collection is not None
+        return self._available
 
     async def search(
         self,
@@ -27,6 +50,9 @@ class RAGService:
         document_type: Optional[str] = None,
     ) -> list[dict]:
         """Perform semantic search over the legal corpus."""
+        if not self.available:
+            return []
+
         where_filter = None
         conditions = []
 
@@ -40,30 +66,34 @@ class RAGService:
         elif len(conditions) > 1:
             where_filter = {"$and": conditions}
 
-        results = self.collection.query(
-            query_texts=[query],
-            n_results=top_k,
-            where=where_filter,
-        )
-
-        search_results = []
-        for i, (chunk_id, doc, metadata, distance) in enumerate(
-            zip(
-                results["ids"][0],
-                results["documents"][0],
-                results["metadatas"][0],
-                results["distances"][0],
+        try:
+            results = self.collection.query(
+                query_texts=[query],
+                n_results=top_k,
+                where=where_filter,
             )
-        ):
-            search_results.append({
-                "chunk_id": chunk_id,
-                "document_id": metadata.get("document_id"),
-                "text": doc,
-                "score": 1 - (distance / 2),  # Convert distance to similarity
-                "metadata": metadata,
-            })
 
-        return search_results
+            search_results = []
+            for i, (chunk_id, doc, metadata, distance) in enumerate(
+                zip(
+                    results["ids"][0],
+                    results["documents"][0],
+                    results["metadatas"][0],
+                    results["distances"][0],
+                )
+            ):
+                search_results.append({
+                    "chunk_id": chunk_id,
+                    "document_id": metadata.get("document_id"),
+                    "text": doc,
+                    "score": 1 - (distance / 2),  # Convert distance to similarity
+                    "metadata": metadata,
+                })
+
+            return search_results
+        except Exception as e:
+            print(f"Search failed: {e}")
+            return []
 
     async def add_document(
         self,
@@ -72,19 +102,25 @@ class RAGService:
         metadata: dict,
     ) -> int:
         """Add document chunks to the vector store."""
+        if not self.available:
+            return 0
+
         ids = [f"{document_id}_{i}" for i in range(len(chunks))]
         metadatas = [
             {**metadata, "chunk_index": i, "document_id": document_id}
             for i in range(len(chunks))
         ]
 
-        self.collection.add(
-            ids=ids,
-            documents=chunks,
-            metadatas=metadatas,
-        )
-
-        return len(chunks)
+        try:
+            self.collection.add(
+                ids=ids,
+                documents=chunks,
+                metadatas=metadatas,
+            )
+            return len(chunks)
+        except Exception as e:
+            print(f"Failed to add document: {e}")
+            return 0
 
     async def generate_answer(
         self,
@@ -203,28 +239,31 @@ Answer:"""
         if not document_ids:
             return []
 
-        query = """
-        MATCH (d)
-        WHERE d.id IN $doc_ids
-        OPTIONAL MATCH (d)-[r]-(related)
-        RETURN d.id as doc_id, d.title as doc_title,
-               collect(DISTINCT {
-                   id: related.id,
-                   title: related.title,
-                   citation: related.citation,
-                   type: labels(related)[0],
-                   relationship: type(r)
-               })[0..3] as related_nodes
-        """
+        try:
+            query = """
+            MATCH (d)
+            WHERE d.id IN $doc_ids
+            OPTIONAL MATCH (d)-[r]-(related)
+            RETURN d.id as doc_id, d.title as doc_title,
+                   collect(DISTINCT {
+                       id: related.id,
+                       title: related.title,
+                       citation: related.citation,
+                       type: labels(related)[0],
+                       relationship: type(r)
+                   })[0..3] as related_nodes
+            """
 
-        result = await neo4j_conn.execute_query(query, {"doc_ids": document_ids})
+            result = await neo4j_conn.execute_query(query, {"doc_ids": document_ids})
 
-        context = []
-        for record in result:
-            context.append({
-                "id": record["doc_id"],
-                "title": record["doc_title"],
-                "related": record["related_nodes"],
-            })
+            context = []
+            for record in result:
+                context.append({
+                    "id": record["doc_id"],
+                    "title": record["doc_title"],
+                    "related": record["related_nodes"],
+                })
 
-        return context
+            return context
+        except Exception:
+            return []

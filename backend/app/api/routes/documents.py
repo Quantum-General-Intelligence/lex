@@ -7,7 +7,7 @@ import uuid
 from app.core.database import get_db
 from app.models.legal import Document, DocumentType, DocumentChunk, IngestionJob, IngestionStatus
 from app.schemas.legal import DocumentCreate, DocumentResponse
-from app.services.ingestion import ingestion_service
+from app.services.ingestion import get_ingestion_service
 
 router = APIRouter()
 
@@ -131,7 +131,7 @@ async def ingest_document(
 
     try:
         # Run the full ingestion pipeline
-        result = await ingestion_service.ingest_file(
+        result = await get_ingestion_service().ingest_file(
             content=content,
             filename=filename,
             content_type=file.content_type or "",
@@ -194,7 +194,7 @@ async def upload_document(
 
     # Try to parse and extract text
     try:
-        raw_text = ingestion_service.parser.parse(
+        raw_text = get_ingestion_service().parser.parse(
             content,
             file.content_type or "",
             file.filename or ""
