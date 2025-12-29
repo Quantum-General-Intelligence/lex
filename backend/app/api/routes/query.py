@@ -4,6 +4,7 @@ from typing import Optional
 
 from app.core.config import get_settings
 from app.core.database import neo4j_conn, get_chroma_client
+from app.core.demo_data import get_demo_store, is_demo_mode
 from app.schemas.rag import QueryRequest, QueryResponse, Citation
 from app.services.rag import RAGService
 
@@ -24,6 +25,66 @@ async def query_legal_corpus(request: QueryRequest):
     4. Provides confidence scores and chain-of-thought
     """
     start_time = time.time()
+
+    # Use demo data if in demo mode
+    if is_demo_mode():
+        demo_store = get_demo_store()
+        search_results = demo_store.search_chunks(
+            query=request.query,
+            top_k=request.top_k,
+            jurisdiction=request.jurisdiction_filter,
+            document_type=request.document_type_filter,
+        )
+
+        # Build citations from demo results
+        citations = []
+        for result in search_results:
+            citations.append(
+                Citation(
+                    document_id=result["document_id"],
+                    document_title=result["metadata"].get("title", "Unknown Document"),
+                    citation=result["metadata"].get("citation"),
+                    chunk_text=result["text"][:500] + "..." if len(result["text"]) > 500 else result["text"],
+                    relevance_score=round(result["score"], 3),
+                    page_or_section=None,
+                )
+            )
+
+        # Get graph context for cited documents
+        graph_context = []
+        if request.include_graph_context and citations:
+            doc_ids = list(set(c.document_id for c in citations[:3]))
+            for doc_id in doc_ids:
+                node = demo_store.get_node(doc_id)
+                if node:
+                    rels = demo_store.get_node_relationships(doc_id)
+                    graph_context.append({
+                        "id": node["id"],
+                        "title": node["title"],
+                        "citation": node.get("citation"),
+                        "related": [{"id": r["node"]["id"], "title": r["node"]["title"], "relationship": r["type"]} for r in rels[:3]],
+                    })
+
+        # Generate answer from demo data
+        answer, confidence, chain_of_thought, ambiguity_flags = _generate_demo_answer(
+            query=request.query,
+            citations=citations,
+            graph_context=graph_context,
+            explain=request.explain,
+        )
+
+        elapsed = (time.time() - start_time) * 1000
+
+        return QueryResponse(
+            query=request.query,
+            answer=answer,
+            confidence_score=confidence,
+            citations=citations,
+            chain_of_thought=chain_of_thought if request.explain else None,
+            related_nodes=[n["id"] for n in graph_context] if graph_context else [],
+            ambiguity_flags=ambiguity_flags,
+            processing_time_ms=round(elapsed, 2),
+        )
 
     # Step 1: Vector search in ChromaDB
     try:
@@ -203,6 +264,68 @@ async def _generate_answer(
         ambiguity_flags.append("Low confidence score - verify with primary sources")
     if model_used == "fallback":
         ambiguity_flags.append("LLM unavailable - showing raw context only")
+
+    return answer, confidence, chain_of_thought, ambiguity_flags
+
+
+def _generate_demo_answer(
+    query: str,
+    citations: list[Citation],
+    graph_context: list[dict],
+    explain: bool,
+) -> tuple[str, float, Optional[str], list[str]]:
+    """Generate a demo answer based on matched citations."""
+    if not citations:
+        return (
+            "I couldn't find relevant information in the demo legal corpus for this query. "
+            "Try searching for topics like 'FOIA', 'FERPA', 'rulemaking', 'environmental', or 'agency'.",
+            0.0,
+            "No matching documents found in demo data." if explain else None,
+            ["No source documents matched the query"],
+        )
+
+    # Build an answer from the top citations
+    top_citation = citations[0]
+    related_docs = [c.document_title for c in citations[1:4]]
+
+    answer = f"Based on the legal corpus, here's what I found regarding your query:\n\n"
+    answer += f"**Primary Source: {top_citation.document_title}**"
+    if top_citation.citation:
+        answer += f" ({top_citation.citation})"
+    answer += f"\n\n{top_citation.chunk_text}\n\n"
+
+    if related_docs:
+        answer += f"**Related Sources:** {', '.join(related_docs)}\n\n"
+
+    if graph_context:
+        answer += "**Knowledge Graph Context:**\n"
+        for ctx in graph_context[:2]:
+            if ctx.get("related"):
+                related_titles = [r["title"] for r in ctx["related"][:2]]
+                answer += f"- {ctx['title']} relates to: {', '.join(related_titles)}\n"
+
+    # Calculate confidence based on match quality
+    confidence = min(0.85, 0.5 + (len(citations) * 0.1))
+
+    # Chain of thought
+    chain_of_thought = None
+    if explain:
+        chain_of_thought = (
+            f"Query Analysis (Demo Mode):\n"
+            f"1. Parsed query: '{query}'\n"
+            f"2. Searched demo corpus using keyword matching\n"
+            f"3. Found {len(citations)} relevant document chunks\n"
+            f"4. Retrieved {len(graph_context)} related nodes from knowledge graph\n"
+            f"5. Generated answer from top matching sources\n"
+            f"6. Confidence based on match count and relevance: {confidence:.0%}\n\n"
+            f"Note: This is demo mode with sample legal data. In production, "
+            f"this would use semantic vector search and LLM-generated responses."
+        )
+
+    # Flags
+    ambiguity_flags = ["Demo mode - using sample data"]
+    if len(citations) < 3:
+        ambiguity_flags.append("Limited matches found")
 
     return answer, confidence, chain_of_thought, ambiguity_flags
 

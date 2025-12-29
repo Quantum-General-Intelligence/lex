@@ -3,6 +3,7 @@ from typing import Optional
 import time
 
 from app.core.database import neo4j_conn
+from app.core.demo_data import get_demo_store, is_demo_mode
 from app.schemas.legal import (
     LegalNodeCreate,
     LegalNodeResponse,
@@ -72,6 +73,26 @@ async def create_node(node: LegalNodeCreate):
 @router.get("/nodes/{node_id}", response_model=LegalNodeResponse)
 async def get_node(node_id: str):
     """Get a node by ID."""
+    # Use demo data if in demo mode
+    if is_demo_mode():
+        demo_store = get_demo_store()
+        node = demo_store.get_node(node_id)
+        if not node:
+            raise HTTPException(status_code=404, detail="Node not found")
+        return LegalNodeResponse(
+            id=node["id"],
+            node_type=LegalNodeType(node["type"]),
+            title=node["title"],
+            citation=node.get("citation"),
+            jurisdiction=node.get("jurisdiction", "federal"),
+            agency=node.get("agency"),
+            effective_date=None,
+            summary=node.get("summary"),
+            source_url=node.get("source_url"),
+            metadata={},
+            relationship_count=len(demo_store.get_node_relationships(node_id)),
+        )
+
     query = """
     MATCH (n)
     WHERE n.id = $id
@@ -113,6 +134,28 @@ async def get_node(node_id: str):
 @router.get("/nodes/{node_id}/details")
 async def get_node_details(node_id: str):
     """Get detailed node information including text, summary, and relationships."""
+    # Use demo data if in demo mode
+    if is_demo_mode():
+        demo_store = get_demo_store()
+        node = demo_store.get_node(node_id)
+        if not node:
+            raise HTTPException(status_code=404, detail="Node not found")
+        relationships = demo_store.get_node_relationships(node_id)
+        return {
+            "id": node["id"],
+            "type": node["type"],
+            "title": node["title"],
+            "citation": node.get("citation"),
+            "jurisdiction": node.get("jurisdiction"),
+            "agency": node.get("agency"),
+            "year": node.get("year"),
+            "court": node.get("court"),
+            "summary": node.get("summary"),
+            "text": node.get("text"),
+            "abbreviation": node.get("abbreviation"),
+            "relationships": relationships,
+        }
+
     # Get the node with all its properties
     node_query = """
     MATCH (n)
@@ -221,6 +264,34 @@ async def list_nodes(
     skip: int = 0,
 ):
     """List nodes with optional filters."""
+    # Use demo data if in demo mode
+    if is_demo_mode():
+        demo_store = get_demo_store()
+        demo_nodes = demo_store.get_nodes(
+            node_type=node_type.value if node_type else None,
+            jurisdiction=jurisdiction,
+            search=search,
+            limit=limit,
+            skip=skip,
+        )
+        return [
+            LegalNodeResponse(
+                id=n["id"],
+                node_type=LegalNodeType(n["type"]),
+                title=n["title"],
+                citation=n.get("citation"),
+                jurisdiction=n.get("jurisdiction", "federal"),
+                agency=n.get("agency"),
+                effective_date=None,
+                summary=n.get("summary"),
+                source_url=n.get("source_url"),
+                metadata={},
+                relationship_count=len(demo_store.get_node_relationships(n["id"])),
+            )
+            for n in demo_nodes
+        ]
+
+    # Original Neo4j implementation
     conditions = []
     params = {"limit": limit, "skip": skip}
 
@@ -290,6 +361,62 @@ async def get_authority_chain(node_id: str, max_depth: int = Query(default=5, le
     to show what legal authority enables a given regulation.
     """
     start_time = time.time()
+
+    # Use demo data if in demo mode
+    if is_demo_mode():
+        demo_store = get_demo_store()
+        node = demo_store.get_node(node_id)
+        if not node:
+            raise HTTPException(status_code=404, detail="Node not found")
+
+        regulation = LegalNodeResponse(
+            id=node["id"],
+            node_type=LegalNodeType(node["type"]),
+            title=node["title"],
+            citation=node.get("citation"),
+            jurisdiction=node.get("jurisdiction", "federal"),
+            agency=node.get("agency"),
+            effective_date=None,
+            summary=node.get("summary"),
+            source_url=None,
+            metadata={},
+            relationship_count=len(demo_store.get_node_relationships(node_id)),
+        )
+
+        chain = demo_store.get_authority_chain(node_id, max_depth)
+        authority_chain = [
+            LegalNodeResponse(
+                id=n["id"],
+                node_type=LegalNodeType(n["type"]),
+                title=n["title"],
+                citation=n.get("citation"),
+                jurisdiction=n.get("jurisdiction", "federal"),
+                agency=n.get("agency"),
+                effective_date=None,
+                summary=n.get("summary"),
+                source_url=None,
+                metadata={},
+                relationship_count=0,
+            )
+            for n in chain
+        ]
+
+        if authority_chain:
+            explanation = f"The {node['type'].lower()} '{node['title']}' derives its authority from {len(authority_chain)} upstream legal source(s). "
+            if authority_chain:
+                explanation += f"The primary authority is '{authority_chain[-1].title}'"
+                if authority_chain[-1].citation:
+                    explanation += f" ({authority_chain[-1].citation})"
+                explanation += "."
+        else:
+            explanation = "No authority chain found. This may be a primary source or its relationships haven't been mapped yet."
+
+        return AuthorityChainResponse(
+            regulation=regulation,
+            authority_chain=authority_chain,
+            depth=len(authority_chain),
+            explanation=explanation,
+        )
 
     # First get the regulation node
     node_query = """
@@ -394,6 +521,17 @@ async def explore_graph(
     Returns nodes and relationships for visualization.
     """
     start_time = time.time()
+
+    # Use demo data if in demo mode
+    if is_demo_mode():
+        demo_store = get_demo_store()
+        result = demo_store.explore_graph(center_node_id=center_node_id, limit=limit)
+        elapsed = (time.time() - start_time) * 1000
+        return {
+            "nodes": result["nodes"],
+            "relationships": result["relationships"],
+            "query_time_ms": elapsed,
+        }
 
     if center_node_id:
         # Explore around a specific node - get nodes and relationships with explicit IDs

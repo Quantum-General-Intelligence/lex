@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
-import { Sidebar } from '@/components/Sidebar'
+import { Navigation } from '@/components/Navigation'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -21,17 +21,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className={`${inter.className} antialiased`}>
+    <html lang="en" className={`${inter.variable} dark`}>
+      <body className={`${inter.className} antialiased bg-vulcan-900 text-vulcan-100 min-h-screen`}>
         <Providers>
-          <div className="flex h-screen bg-slate-50">
-            <Sidebar />
-            <main className="flex-1 overflow-auto">
-              <div className="page-transition">
-                {children}
-              </div>
-            </main>
-          </div>
+          <Navigation />
+          <main className="pt-16">
+            {children}
+          </main>
         </Providers>
       </body>
     </html>

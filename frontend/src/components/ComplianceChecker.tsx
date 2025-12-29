@@ -83,22 +83,22 @@ export function ComplianceChecker() {
   const getSeverityConfig = (severity: string) => {
     switch (severity) {
       case 'critical':
-        return { icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' }
+        return { icon: AlertCircle, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20' }
       case 'warning':
-        return { icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' }
+        return { icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' }
       default:
-        return { icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' }
+        return { icon: FileText, color: 'text-accent', bg: 'bg-accent/10', border: 'border-accent/20' }
     }
   }
 
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'compliant':
-        return { icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', label: 'Compliant' }
+        return { icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', label: 'Compliant' }
       case 'issues_found':
-        return { icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50', label: 'Issues Found' }
+        return { icon: AlertCircle, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', label: 'Issues Found' }
       default:
-        return { icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-50', label: 'Review Required' }
+        return { icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', label: 'Review Required' }
     }
   }
 
@@ -106,7 +106,7 @@ export function ComplianceChecker() {
     <div className="space-y-6">
       {/* Input Section */}
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-2">
+        <label className="block text-sm font-medium text-vulcan-200 mb-2">
           Document Text for Compliance Check
         </label>
         <textarea
@@ -114,23 +114,23 @@ export function ComplianceChecker() {
           onChange={(e) => setDocumentText(e.target.value)}
           placeholder="Paste the document text you want to check for regulatory compliance..."
           rows={8}
-          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none resize-none text-slate-900 placeholder-slate-400 transition-all"
+          className="w-full px-4 py-3 border border-vulcan-600 rounded-xl focus:ring-2 focus:ring-accent/30 focus:border-accent focus:outline-none resize-none bg-vulcan-900 text-white placeholder-vulcan-500 transition-all"
         />
         <div className="mt-3 flex items-center justify-between">
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-vulcan-400">
             {documentText.length} characters
           </p>
           <div className="flex gap-2">
             <button
               onClick={() => setDocumentText('')}
-              className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+              className="px-4 py-2 text-sm text-vulcan-300 hover:text-white border border-vulcan-600 rounded-lg hover:bg-vulcan-700 transition-colors"
             >
               Clear
             </button>
             <button
               onClick={handleSubmit}
               disabled={loading || !documentText.trim()}
-              className="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium text-sm transition-all shadow-sm"
+              className="px-5 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium text-sm transition-all"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -160,7 +160,7 @@ Appropriate security measures will be implemented to protect collected data from
 
 4. ACCESS
 Users may request access to their records by contacting the agency.`)}
-        className="text-sm text-blue-600 hover:text-blue-700 hover:underline font-medium"
+        className="text-sm text-accent hover:text-accent-light hover:underline font-medium"
       >
         Load sample document for testing
       </button>
@@ -169,7 +169,7 @@ Users may request access to their records by contacting the agency.`)}
       {response && (
         <div className="space-y-6">
           {/* Overall Status */}
-          <div className={`p-4 rounded-xl ${getStatusConfig(response.overall_status).bg} border ${getStatusConfig(response.overall_status).bg.replace('bg-', 'border-').replace('-50', '-200')}`}>
+          <div className={`p-4 rounded-xl ${getStatusConfig(response.overall_status).bg} border ${getStatusConfig(response.overall_status).border}`}>
             <div className="flex items-center gap-3">
               {(() => {
                 const StatusIcon = getStatusConfig(response.overall_status).icon
@@ -179,7 +179,7 @@ Users may request access to their records by contacting the agency.`)}
                 <h3 className={`font-semibold ${getStatusConfig(response.overall_status).color}`}>
                   {getStatusConfig(response.overall_status).label}
                 </h3>
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-vulcan-300">
                   Checked against {response.checked_regulations} regulations in {response.processing_time_ms.toFixed(0)}ms
                 </p>
               </div>
@@ -189,7 +189,7 @@ Users may request access to their records by contacting the agency.`)}
           {/* Issues List */}
           {response.issues.length > 0 && (
             <div>
-              <h3 className="text-sm font-semibold text-slate-900 mb-4">
+              <h3 className="text-sm font-semibold text-white mb-4">
                 Identified Issues ({response.issues.length})
               </h3>
               <div className="space-y-4">
@@ -205,26 +205,26 @@ Users may request access to their records by contacting the agency.`)}
                           <span className={`font-medium ${config.color} capitalize text-sm`}>
                             {issue.severity}
                           </span>
-                          <span className="text-slate-300">|</span>
-                          <span className="font-mono text-sm text-blue-600">
+                          <span className="text-vulcan-500">|</span>
+                          <span className="font-mono text-sm text-accent">
                             {issue.regulation_citation}
                           </span>
                         </div>
-                        <span className="text-xs text-slate-500 bg-white/60 px-2 py-0.5 rounded-full">
+                        <span className="text-xs text-vulcan-400 bg-vulcan-800/60 px-2 py-0.5 rounded-full">
                           {Math.round(issue.confidence * 100)}% confidence
                         </span>
                       </div>
-                      <div className="p-4 bg-white">
-                        <p className="text-slate-800 text-sm mb-3">{issue.issue_description}</p>
-                        <div className="bg-slate-50 rounded-lg p-3 mb-3 border border-slate-100">
-                          <p className="text-xs text-slate-500 mb-1">Document excerpt:</p>
-                          <p className="text-sm text-slate-700 italic">"{issue.document_excerpt}"</p>
+                      <div className="p-4 bg-vulcan-800/30">
+                        <p className="text-vulcan-200 text-sm mb-3">{issue.issue_description}</p>
+                        <div className="bg-vulcan-900/50 rounded-lg p-3 mb-3 border border-vulcan-700/50">
+                          <p className="text-xs text-vulcan-500 mb-1">Document excerpt:</p>
+                          <p className="text-sm text-vulcan-300 italic">"{issue.document_excerpt}"</p>
                         </div>
                         {issue.suggested_fix && (
                           <div className="flex items-start gap-2 text-sm">
-                            <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                            <span className="text-slate-700">
-                              <strong className="text-slate-900">Suggested fix:</strong> {issue.suggested_fix}
+                            <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                            <span className="text-vulcan-300">
+                              <strong className="text-white">Suggested fix:</strong> {issue.suggested_fix}
                             </span>
                           </div>
                         )}
@@ -239,9 +239,9 @@ Users may request access to their records by contacting the agency.`)}
           {/* No Issues */}
           {response.issues.length === 0 && response.overall_status === 'compliant' && (
             <div className="text-center py-8">
-              <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-slate-900">No Compliance Issues Found</h3>
-              <p className="text-slate-500 mt-1">
+              <CheckCircle className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
+              <h3 className="text-lg font-semibold text-white">No Compliance Issues Found</h3>
+              <p className="text-vulcan-400 mt-1">
                 The document appears to comply with checked regulations.
               </p>
             </div>
@@ -251,12 +251,12 @@ Users may request access to their records by contacting the agency.`)}
 
       {/* Empty State */}
       {!response && !loading && (
-        <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-xl">
-          <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Upload className="w-7 h-7 text-amber-500" />
+        <div className="text-center py-12 border-2 border-dashed border-vulcan-600 rounded-xl">
+          <div className="w-14 h-14 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Upload className="w-7 h-7 text-amber-400" />
           </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">Check Document Compliance</h3>
-          <p className="text-slate-500 max-w-md mx-auto text-sm">
+          <h3 className="text-lg font-semibold text-white mb-2">Check Document Compliance</h3>
+          <p className="text-vulcan-400 max-w-md mx-auto text-sm">
             Paste or upload document text to check for compliance against
             federal regulations. Get specific citations and suggested fixes.
           </p>

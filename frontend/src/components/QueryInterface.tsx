@@ -83,9 +83,9 @@ export function QueryInterface() {
   }
 
   const getConfidenceConfig = (score: number) => {
-    if (score >= 0.8) return { color: 'text-emerald-600', bg: 'bg-emerald-50', label: 'High' }
-    if (score >= 0.6) return { color: 'text-amber-600', bg: 'bg-amber-50', label: 'Medium' }
-    return { color: 'text-red-600', bg: 'bg-red-50', label: 'Low' }
+    if (score >= 0.8) return { color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', label: 'High' }
+    if (score >= 0.6) return { color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20', label: 'Medium' }
+    return { color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20', label: 'Low' }
   }
 
   return (
@@ -95,19 +95,19 @@ export function QueryInterface() {
         <div className="relative">
           <div className="flex gap-3">
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-vulcan-500" />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Ask a legal question... e.g., 'What are the FOIA disclosure requirements?'"
-                className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                className="w-full pl-12 pr-4 py-3.5 bg-vulcan-900 border border-vulcan-600 rounded-xl text-white placeholder-vulcan-500 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
               />
             </div>
             <button
               type="submit"
               disabled={loading || !query.trim()}
-              className="px-6 py-3.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all shadow-sm hover:shadow-md"
+              className="px-6 py-3.5 bg-accent hover:bg-accent-hover text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all shadow-glow hover:shadow-glow-lg"
             >
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -122,9 +122,9 @@ export function QueryInterface() {
 
       {/* Error Display */}
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-          <p className="text-red-700 text-sm">{error}</p>
+        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+          <p className="text-red-300 text-sm">{error}</p>
         </div>
       )}
 
@@ -132,31 +132,31 @@ export function QueryInterface() {
       {response && (
         <div className="space-y-6">
           {/* Answer Card */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-blue-500" />
+          <div className="bg-vulcan-800/50 rounded-xl border border-vulcan-700/50 overflow-hidden">
+            <div className="px-5 py-4 border-b border-vulcan-700/50 flex items-center justify-between">
+              <h3 className="font-semibold text-white flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-accent" />
                 AI Response
               </h3>
               <div className="flex items-center gap-3">
                 <span
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium ${getConfidenceConfig(response.confidence_score).bg} ${getConfidenceConfig(response.confidence_score).color}`}
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium border ${getConfidenceConfig(response.confidence_score).bg} ${getConfidenceConfig(response.confidence_score).color}`}
                 >
                   {Math.round(response.confidence_score * 100)}% Confidence
                 </span>
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-vulcan-500">
                   {response.processing_time_ms.toFixed(0)}ms
                 </span>
               </div>
             </div>
             <div className="p-5">
-              <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">{response.answer}</p>
+              <p className="text-vulcan-200 whitespace-pre-wrap leading-relaxed">{response.answer}</p>
 
               {/* Ambiguity Flags */}
               {response.ambiguity_flags.length > 0 && (
-                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                  <p className="text-xs font-medium text-amber-800 mb-1">Review Recommended</p>
-                  <ul className="text-xs text-amber-700">
+                <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                  <p className="text-xs font-medium text-amber-400 mb-1">Review Recommended</p>
+                  <ul className="text-xs text-amber-300/80">
                     {response.ambiguity_flags.map((flag, i) => (
                       <li key={i}>{flag}</li>
                     ))}
@@ -168,31 +168,31 @@ export function QueryInterface() {
 
           {/* Citations */}
           <div>
-            <h3 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-slate-500" />
+            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-vulcan-400" />
               Sources & Citations ({response.citations.length})
             </h3>
             <div className="space-y-2">
               {response.citations.map((citation, i) => (
                 <div
                   key={i}
-                  className="bg-white border border-slate-200 rounded-xl p-4 hover:border-blue-200 hover:shadow-sm transition-all group"
+                  className="bg-vulcan-800/50 border border-vulcan-700/50 rounded-xl p-4 hover:border-accent/30 transition-all group"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h4 className="font-medium text-slate-900 text-sm">{citation.document_title}</h4>
+                      <h4 className="font-medium text-white text-sm">{citation.document_title}</h4>
                       {citation.citation && (
-                        <p className="text-xs font-mono text-blue-600 mt-0.5">{citation.citation}</p>
+                        <p className="text-xs font-mono text-accent mt-0.5">{citation.citation}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-2 ml-4">
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${getConfidenceConfig(citation.relevance_score).bg} ${getConfidenceConfig(citation.relevance_score).color}`}>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${getConfidenceConfig(citation.relevance_score).bg} ${getConfidenceConfig(citation.relevance_score).color}`}>
                         {Math.round(citation.relevance_score * 100)}%
                       </span>
-                      <ExternalLink className="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-500 transition-colors" />
+                      <ExternalLink className="w-3.5 h-3.5 text-vulcan-500 group-hover:text-accent transition-colors" />
                     </div>
                   </div>
-                  <p className="mt-2 text-xs text-slate-500 line-clamp-2">{citation.chunk_text}</p>
+                  <p className="mt-2 text-xs text-vulcan-400 line-clamp-2">{citation.chunk_text}</p>
                 </div>
               ))}
             </div>
@@ -200,12 +200,12 @@ export function QueryInterface() {
 
           {/* Chain of Thought */}
           {response.chain_of_thought && (
-            <details className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-              <summary className="px-5 py-3 cursor-pointer text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+            <details className="bg-vulcan-800/50 border border-vulcan-700/50 rounded-xl overflow-hidden">
+              <summary className="px-5 py-3 cursor-pointer text-sm font-medium text-vulcan-300 hover:bg-vulcan-700/30 transition-colors">
                 View reasoning chain
               </summary>
-              <div className="px-5 pb-4 pt-2 border-t border-slate-100">
-                <pre className="text-xs text-slate-600 whitespace-pre-wrap font-mono bg-slate-50 p-3 rounded-lg">
+              <div className="px-5 pb-4 pt-2 border-t border-vulcan-700/50">
+                <pre className="text-xs text-vulcan-400 whitespace-pre-wrap font-mono bg-vulcan-900/50 p-3 rounded-lg">
                   {response.chain_of_thought}
                 </pre>
               </div>
@@ -217,11 +217,11 @@ export function QueryInterface() {
       {/* Empty State */}
       {!response && !loading && (
         <div className="text-center py-16">
-          <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Search className="w-8 h-8 text-slate-400" />
+          <div className="w-16 h-16 bg-vulcan-800 border border-vulcan-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Search className="w-8 h-8 text-vulcan-500" />
           </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">Query the Legal Corpus</h3>
-          <p className="text-slate-500 max-w-md mx-auto text-sm">
+          <h3 className="text-lg font-semibold text-white mb-2">Query the Legal Corpus</h3>
+          <p className="text-vulcan-400 max-w-md mx-auto text-sm">
             Ask questions about regulations, statutes, or compliance requirements.
             Get answers with citations and confidence scores.
           </p>
@@ -234,7 +234,7 @@ export function QueryInterface() {
               <button
                 key={suggestion}
                 onClick={() => setQuery(suggestion)}
-                className="px-4 py-2 text-sm bg-white border border-slate-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg text-slate-700 transition-all"
+                className="px-4 py-2 text-sm bg-vulcan-800 border border-vulcan-700 hover:border-accent/50 hover:bg-vulcan-700 rounded-lg text-vulcan-300 transition-all"
               >
                 {suggestion}
               </button>

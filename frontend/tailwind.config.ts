@@ -9,32 +9,33 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Vulcan Technologies brand palette
+        // Vulcan-inspired dark theme palette
         'vulcan': {
-          900: '#0f172a', // Deep navy - primary
-          800: '#1e293b', // Dark slate
-          700: '#334155', // Slate
-          600: '#475569', // Medium slate
-          500: '#64748b', // Light slate
-          400: '#94a3b8', // Muted
-          300: '#cbd5e1', // Light
-          200: '#e2e8f0', // Lighter
-          100: '#f1f5f9', // Lightest
-          50: '#f8fafc',  // Near white
+          950: '#050709', // Deepest black
+          900: '#0a0e1a', // Primary background
+          850: '#0d1220', // Slightly lighter bg
+          800: '#111827', // Card backgrounds
+          700: '#1c2333', // Elevated surfaces
+          600: '#2a3349', // Borders, dividers
+          500: '#4a5568', // Muted text
+          400: '#718096', // Secondary text
+          300: '#a0aec0', // Body text
+          200: '#cbd5e0', // Light text
+          100: '#e2e8f0', // Bright text
+          50: '#f7fafc',  // White text
         },
         'accent': {
           DEFAULT: '#3b82f6', // Primary blue
           hover: '#2563eb',   // Darker blue
-          light: '#dbeafe',   // Light blue bg
+          light: '#60a5fa',   // Lighter blue
+          glow: '#3b82f6',    // For glows/shadows
           500: '#3b82f6',
           600: '#2563eb',
+          400: '#60a5fa',
         },
         'success': '#10b981',
         'warning': '#f59e0b',
         'error': '#ef4444',
-        // Keep legacy colors for backward compatibility during migration
-        'lex-navy': '#0f172a',
-        'lex-gold': '#3b82f6',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -43,7 +44,23 @@ const config: Config = {
       boxShadow: {
         'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
         'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)',
+        'glow': '0 0 20px rgba(59, 130, 246, 0.3)',
+        'glow-lg': '0 0 40px rgba(59, 130, 246, 0.2)',
       },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'grid-pattern': 'linear-gradient(to right, rgba(59, 130, 246, 0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(59, 130, 246, 0.03) 1px, transparent 1px)',
+      },
+      animation: {
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'float': 'float 6s ease-in-out infinite',
+      },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-10px)' },
+        }
+      }
     },
   },
   plugins: [],

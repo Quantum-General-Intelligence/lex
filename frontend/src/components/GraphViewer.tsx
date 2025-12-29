@@ -225,27 +225,27 @@ export function GraphViewer() {
         {/* Controls */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-slate-900">Knowledge Graph</h3>
-            <span className="text-xs text-slate-500">
+            <h3 className="text-sm font-semibold text-white">Knowledge Graph</h3>
+            <span className="text-xs text-vulcan-400">
               {graphData.nodes.length} nodes, {graphData.links.length} relationships
             </span>
             <button
               onClick={fetchGraphData}
               disabled={loading}
-              className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-1.5 text-vulcan-400 hover:text-white hover:bg-vulcan-700 rounded-lg transition-colors"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
           </div>
           <div className="flex items-center gap-1">
-            <button onClick={handleZoomOut} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-              <ZoomOut className="w-4 h-4 text-slate-500" />
+            <button onClick={handleZoomOut} className="p-2 hover:bg-vulcan-700 rounded-lg transition-colors">
+              <ZoomOut className="w-4 h-4 text-vulcan-400" />
             </button>
-            <button onClick={handleZoomIn} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-              <ZoomIn className="w-4 h-4 text-slate-500" />
+            <button onClick={handleZoomIn} className="p-2 hover:bg-vulcan-700 rounded-lg transition-colors">
+              <ZoomIn className="w-4 h-4 text-vulcan-400" />
             </button>
-            <button onClick={handleFitView} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-              <Maximize2 className="w-4 h-4 text-slate-500" />
+            <button onClick={handleFitView} className="p-2 hover:bg-vulcan-700 rounded-lg transition-colors">
+              <Maximize2 className="w-4 h-4 text-vulcan-400" />
             </button>
           </div>
         </div>
@@ -255,26 +255,27 @@ export function GraphViewer() {
           {Object.entries(NODE_COLORS).map(([type, color]) => (
             <div key={type} className="flex items-center gap-1.5">
               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
-              <span className="text-slate-600">{type}</span>
+              <span className="text-vulcan-300">{type}</span>
             </div>
           ))}
         </div>
 
         {/* Graph */}
-        <div className="graph-container h-[500px] relative rounded-xl overflow-hidden border border-slate-200">
+        <div className="graph-container h-[500px] relative rounded-xl overflow-hidden border border-vulcan-700/50 bg-vulcan-900">
           <ForceGraph2D
             ref={graphRef}
             graphData={graphData}
             nodeLabel={(node: any) => `${node.title}${node.citation ? ` (${node.citation})` : ''}`}
             nodeColor={(node: any) => NODE_COLORS[node.type] || '#64748b'}
             nodeRelSize={6}
-            linkColor={() => '#cbd5e1'}
+            linkColor={() => '#4a5568'}
             linkWidth={1.5}
             linkDirectionalArrowLength={5}
             linkDirectionalArrowRelPos={1}
             linkLabel={(link: any) => link.type}
             onNodeClick={handleNodeClick}
             cooldownTicks={100}
+            backgroundColor="#0a0e1a"
             nodeCanvasObject={(node: any, ctx, globalScale) => {
               const label = node.title?.substring(0, 18) || ''
               const fontSize = 11 / globalScale
@@ -292,7 +293,7 @@ export function GraphViewer() {
                 ctx.arc(node.x, node.y, 10, 0, 2 * Math.PI)
                 ctx.stroke()
               } else {
-                ctx.strokeStyle = '#ffffff'
+                ctx.strokeStyle = '#1c2333'
                 ctx.lineWidth = 1.5 / globalScale
                 ctx.stroke()
               }
@@ -300,7 +301,7 @@ export function GraphViewer() {
               if (globalScale > 0.7) {
                 ctx.textAlign = 'center'
                 ctx.textBaseline = 'top'
-                ctx.fillStyle = '#334155'
+                ctx.fillStyle = '#a0aec0'
                 ctx.fillText(label, node.x, node.y + 10)
               }
             }}
@@ -310,9 +311,9 @@ export function GraphViewer() {
 
       {/* Details Panel */}
       {selectedNode && (
-        <div className="w-[40%] min-w-[350px] bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col max-h-[620px]">
+        <div className="w-[40%] min-w-[350px] bg-vulcan-800/50 backdrop-blur-sm rounded-xl border border-vulcan-700/50 overflow-hidden flex flex-col max-h-[620px]">
           {/* Header */}
-          <div className="p-4 border-b border-slate-100 flex items-start justify-between">
+          <div className="p-4 border-b border-vulcan-700/50 flex items-start justify-between">
             <div className="flex items-start gap-3">
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -321,9 +322,9 @@ export function GraphViewer() {
                 <NodeIcon className="w-5 h-5" style={{ color: NODE_COLORS[selectedNode.type] }} />
               </div>
               <div className="min-w-0">
-                <h4 className="font-semibold text-slate-900 leading-tight">{selectedNode.title}</h4>
+                <h4 className="font-semibold text-white leading-tight">{selectedNode.title}</h4>
                 {(nodeDetails?.citation || selectedNode.citation) && (
-                  <p className="text-sm font-mono text-blue-600 mt-0.5">{nodeDetails?.citation || selectedNode.citation}</p>
+                  <p className="text-sm font-mono text-accent mt-0.5">{nodeDetails?.citation || selectedNode.citation}</p>
                 )}
                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                   <span
@@ -336,20 +337,20 @@ export function GraphViewer() {
                     {selectedNode.type}
                   </span>
                   {nodeDetails?.year && (
-                    <span className="text-xs text-slate-500">{nodeDetails.year}</span>
+                    <span className="text-xs text-vulcan-400">{nodeDetails.year}</span>
                   )}
                   {nodeDetails?.agency && (
-                    <span className="text-xs text-slate-500">{nodeDetails.agency}</span>
+                    <span className="text-xs text-vulcan-400">{nodeDetails.agency}</span>
                   )}
                   {nodeDetails?.court && (
-                    <span className="text-xs text-slate-500">{nodeDetails.court}</span>
+                    <span className="text-xs text-vulcan-400">{nodeDetails.court}</span>
                   )}
                 </div>
               </div>
             </div>
             <button
               onClick={handleCloseDetails}
-              className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-1.5 text-vulcan-400 hover:text-white hover:bg-vulcan-700 rounded-lg transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -359,24 +360,24 @@ export function GraphViewer() {
           <div className="flex-1 overflow-y-auto">
             {loadingDetails ? (
               <div className="p-8 text-center">
-                <Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-400" />
-                <p className="text-sm text-slate-500 mt-2">Loading details...</p>
+                <Loader2 className="w-6 h-6 animate-spin mx-auto text-vulcan-400" />
+                <p className="text-sm text-vulcan-400 mt-2">Loading details...</p>
               </div>
             ) : nodeDetails ? (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-vulcan-700/50">
                 {/* Summary */}
                 {nodeDetails.summary && (
                   <div className="p-4">
-                    <h5 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Summary</h5>
-                    <p className="text-sm text-slate-700 leading-relaxed">{nodeDetails.summary}</p>
+                    <h5 className="text-xs font-semibold text-vulcan-400 uppercase tracking-wide mb-2">Summary</h5>
+                    <p className="text-sm text-vulcan-200 leading-relaxed">{nodeDetails.summary}</p>
                   </div>
                 )}
 
                 {/* Full Text (collapsible or truncated) */}
                 {nodeDetails.text && (
                   <div className="p-4">
-                    <h5 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Full Text</h5>
-                    <div className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto bg-slate-50 rounded-lg p-3 border border-slate-100">
+                    <h5 className="text-xs font-semibold text-vulcan-400 uppercase tracking-wide mb-2">Full Text</h5>
+                    <div className="text-sm text-vulcan-300 leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto bg-vulcan-900/50 rounded-lg p-3 border border-vulcan-700/50">
                       {nodeDetails.text}
                     </div>
                   </div>
@@ -385,7 +386,7 @@ export function GraphViewer() {
                 {/* Relationships */}
                 {nodeDetails.relationships.length > 0 && (
                   <div className="p-4">
-                    <h5 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+                    <h5 className="text-xs font-semibold text-vulcan-400 uppercase tracking-wide mb-3">
                       Relationships ({nodeDetails.relationships.length})
                     </h5>
                     <div className="space-y-3">
@@ -393,11 +394,11 @@ export function GraphViewer() {
                         <div key={idx}>
                           <div className="flex items-center gap-2 mb-2">
                             {group.direction === 'outgoing' ? (
-                              <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+                              <ArrowRight className="w-3.5 h-3.5 text-vulcan-500" />
                             ) : (
-                              <ArrowLeft className="w-3.5 h-3.5 text-slate-400" />
+                              <ArrowLeft className="w-3.5 h-3.5 text-vulcan-500" />
                             )}
-                            <span className="text-xs font-medium text-slate-600">
+                            <span className="text-xs font-medium text-vulcan-300">
                               {group.direction === 'outgoing' ? '' : 'Is '}{RELATIONSHIP_LABELS[group.type] || group.type}{group.direction === 'incoming' ? ' by' : ''}
                             </span>
                           </div>
@@ -406,19 +407,19 @@ export function GraphViewer() {
                               <button
                                 key={nodeIdx}
                                 onClick={() => handleRelationshipNodeClick(relNode.id)}
-                                className="w-full text-left p-2 rounded-lg border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition-colors group"
+                                className="w-full text-left p-2 rounded-lg border border-vulcan-700/50 hover:border-vulcan-600 hover:bg-vulcan-700/30 transition-colors group"
                               >
                                 <div className="flex items-center gap-2">
                                   <div
                                     className="w-2 h-2 rounded-full flex-shrink-0"
                                     style={{ backgroundColor: NODE_COLORS[relNode.type] || '#64748b' }}
                                   />
-                                  <span className="text-sm text-slate-800 group-hover:text-blue-600 truncate">
+                                  <span className="text-sm text-vulcan-200 group-hover:text-accent truncate">
                                     {relNode.title}
                                   </span>
                                 </div>
                                 {relNode.citation && (
-                                  <p className="text-xs font-mono text-slate-500 ml-4 mt-0.5">{relNode.citation}</p>
+                                  <p className="text-xs font-mono text-vulcan-500 ml-4 mt-0.5">{relNode.citation}</p>
                                 )}
                               </button>
                             ))}
@@ -432,13 +433,13 @@ export function GraphViewer() {
                 {/* No relationships */}
                 {nodeDetails.relationships.length === 0 && (
                   <div className="p-4 text-center">
-                    <p className="text-sm text-slate-500">No relationships mapped yet</p>
+                    <p className="text-sm text-vulcan-400">No relationships mapped yet</p>
                   </div>
                 )}
               </div>
             ) : (
               <div className="p-4">
-                <p className="text-sm text-slate-500">Details not available</p>
+                <p className="text-sm text-vulcan-400">Details not available</p>
               </div>
             )}
           </div>
