@@ -1,0 +1,143 @@
+services:
+  # PostgreSQL - Metadata storage
+  postgres:
+    image: postgres:16-alpine
+    container_name: lex-postgres
+    environment:
+      POSTGRES_USER: lex
+      POSTGRES_PASSWORD: lex_dev_password
+      POSTGRES_DB: lex
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lex"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Neo4j - Legal Knowledge Graph
+  neo4j:
+    image: neo4j:5.15.0-community
+    container_name: lex-neo4j
+    environment:
+      NEO4J_AUTH: neo4j/lex_graph_password
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_security_procedures_unrestricted: apoc.*
+    ports:
+      - "7474:7474"  # HTTP
+      - "7687:7687"  # Bolt
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ChromaDB - Vector Store for RAG
+  chromadb:
+    image: chromadb/chroma:0.5.23
+    container_name: lex-chromadb
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      ANONYMIZED_TELEMETRY: "false"
+      IS_PERSISTENT: "true"
+
+  # Redis - Caching and job queue
+  redis:
+    image: redis:7-alpine
+    container_name: lex-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Ollama - Local LLM (optional, for fully local setup)
+  # Note: On Mac, Ollama runs natively better than in Docker.
+  # Comment out this service and install Ollama directly: https://ollama.ai
+  ollama:
+    image: ollama/ollama:latest
+    container_name: lex-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # On Linux with NVIDIA GPU, uncomment below:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lex-backend
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgresql://lex:lex_dev_password@postgres:5432/lex
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: lex_graph_password
+      CHROMA_HOST: chromadb
+      CHROMA_PORT: 8000
+      REDIS_URL: redis://redis:6379
+      OLLAMA_HOST: http://ollama:11434
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ENVIRONMENT: development
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: lex-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    command: npm run dev
+
+volumes:
+  postgres_data:
+  neo4j_data:
+  neo4j_logs:
+  chroma_data:
+  redis_data:
+  ollama_data:
