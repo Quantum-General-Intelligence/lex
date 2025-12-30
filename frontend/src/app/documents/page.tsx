@@ -5,6 +5,7 @@ import { FileText, Search, Filter, ExternalLink } from 'lucide-react'
 import { NODE_COLOR_CLASSES } from '@/constants/legalNodeConfig'
 import { PageHeader } from '@/components/PageHeader'
 import { API_BASE_URL } from '@/lib/api'
+import { DocumentListSkeleton } from '@/components/Skeleton'
 
 interface LegalDocument {
   id: string
@@ -15,6 +16,33 @@ interface LegalDocument {
   agency?: string
   summary?: string
 }
+
+// Demo documents for fallback
+const DEMO_DOCUMENTS: LegalDocument[] = [
+  { id: 'statute-apa', title: 'Administrative Procedure Act', citation: '5 U.S.C. § 551-559', type: 'Statute', jurisdiction: 'federal', summary: 'The foundational statute governing federal agency rulemaking and adjudication.' },
+  { id: 'statute-foia', title: 'Freedom of Information Act', citation: '5 U.S.C. § 552', type: 'Statute', jurisdiction: 'federal', summary: 'Provides public access to federal agency records.' },
+  { id: 'statute-privacy-act', title: 'Privacy Act of 1974', citation: '5 U.S.C. § 552a', type: 'Statute', jurisdiction: 'federal', summary: 'Governs the collection and use of personal information by federal agencies.' },
+  { id: 'statute-ferpa', title: 'Family Educational Rights and Privacy Act', citation: '20 U.S.C. § 1232g', type: 'Statute', jurisdiction: 'federal', agency: 'Department of Education', summary: 'Protects the privacy of student education records.' },
+  { id: 'statute-hipaa', title: 'Health Insurance Portability and Accountability Act', citation: '42 U.S.C. § 1320d', type: 'Statute', jurisdiction: 'federal', agency: 'HHS', summary: 'Establishes national standards to protect sensitive patient health information.' },
+  { id: 'statute-clean-air', title: 'Clean Air Act', citation: '42 U.S.C. § 7401', type: 'Statute', jurisdiction: 'federal', agency: 'EPA', summary: 'Comprehensive federal law regulating air emissions.' },
+  { id: 'statute-clean-water', title: 'Clean Water Act', citation: '33 U.S.C. § 1251', type: 'Statute', jurisdiction: 'federal', agency: 'EPA', summary: 'Regulates discharges of pollutants into U.S. waters.' },
+  { id: 'statute-nepa', title: 'National Environmental Policy Act', citation: '42 U.S.C. § 4321', type: 'Statute', jurisdiction: 'federal', summary: 'Requires environmental impact assessments for federal actions.' },
+  { id: 'statute-esa', title: 'Endangered Species Act', citation: '16 U.S.C. § 1531', type: 'Statute', jurisdiction: 'federal', agency: 'Fish and Wildlife Service', summary: 'Provides for the conservation of endangered and threatened species.' },
+  { id: 'statute-dodd-frank', title: 'Dodd-Frank Wall Street Reform Act', citation: '12 U.S.C. § 5301', type: 'Statute', jurisdiction: 'federal', summary: 'Comprehensive financial regulatory reform enacted after the 2008 crisis.' },
+  { id: 'reg-hipaa-privacy', title: 'HIPAA Privacy Rule', citation: '45 CFR Part 160, 164', type: 'Regulation', jurisdiction: 'federal', agency: 'HHS', summary: 'Establishes standards for protection of health information.' },
+  { id: 'reg-ferpa-impl', title: 'FERPA Regulations', citation: '34 CFR Part 99', type: 'Regulation', jurisdiction: 'federal', agency: 'Department of Education', summary: 'Implements FERPA requirements for educational institutions.' },
+  { id: 'reg-naaqs', title: 'National Ambient Air Quality Standards', citation: '40 CFR Part 50', type: 'Regulation', jurisdiction: 'federal', agency: 'EPA', summary: 'Air quality standards for criteria pollutants.' },
+  { id: 'reg-nepa-impl', title: 'CEQ NEPA Regulations', citation: '40 CFR Parts 1500-1508', type: 'Regulation', jurisdiction: 'federal', agency: 'CEQ', summary: 'Implements NEPA environmental review requirements.' },
+  { id: 'case-chevron', title: 'Chevron U.S.A., Inc. v. NRDC', citation: '467 U.S. 837 (1984)', type: 'CaseLaw', jurisdiction: 'federal', summary: 'Established Chevron deference doctrine for agency interpretations.' },
+  { id: 'case-loper-bright', title: 'Loper Bright Enterprises v. Raimondo', citation: '603 U.S. ___ (2024)', type: 'CaseLaw', jurisdiction: 'federal', summary: 'Overruled Chevron deference, requiring courts to interpret statutes independently.' },
+  { id: 'case-marbury', title: 'Marbury v. Madison', citation: '5 U.S. 137 (1803)', type: 'CaseLaw', jurisdiction: 'federal', summary: 'Established the principle of judicial review.' },
+  { id: 'case-west-virginia-epa', title: 'West Virginia v. EPA', citation: '597 U.S. ___ (2022)', type: 'CaseLaw', jurisdiction: 'federal', summary: 'Applied the major questions doctrine to limit agency authority.' },
+  { id: 'eo-12866', title: 'E.O. 12866 - Regulatory Planning and Review', citation: 'E.O. 12866', type: 'ExecutiveOrder', jurisdiction: 'federal', agency: 'OMB', summary: 'Establishes principles for regulatory review including cost-benefit analysis.' },
+  { id: 'eo-14110', title: 'E.O. 14110 - Safe, Secure AI', citation: 'E.O. 14110', type: 'ExecutiveOrder', jurisdiction: 'federal', summary: 'Establishes requirements for AI safety and trustworthiness.' },
+  { id: 'agency-epa', title: 'Environmental Protection Agency', type: 'Agency', jurisdiction: 'federal', summary: 'Independent agency responsible for protecting human health and the environment.' },
+  { id: 'agency-sec', title: 'Securities and Exchange Commission', type: 'Agency', jurisdiction: 'federal', summary: 'Enforces federal securities laws and regulates the securities industry.' },
+  { id: 'agency-ftc', title: 'Federal Trade Commission', type: 'Agency', jurisdiction: 'federal', summary: 'Focuses on consumer protection and preventing anticompetitive practices.' },
+]
 
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState<LegalDocument[]>([])
@@ -37,13 +65,32 @@ export default function DocumentsPage() {
       const res = await fetch(`${API_BASE_URL}/api/graph/nodes?${params}`)
       if (res.ok) {
         const data = await res.json()
-        setDocuments(data)
+        if (data.length > 0) {
+          setDocuments(data)
+        } else {
+          // Fall back to demo data if no results
+          setDocuments(filterDemoDocuments(searchTerm, typeFilter))
+        }
+      } else {
+        setDocuments(filterDemoDocuments(searchTerm, typeFilter))
       }
-    } catch (err) {
-      console.error('Failed to fetch documents:', err)
+    } catch {
+      // Use demo data on error
+      setDocuments(filterDemoDocuments(searchTerm, typeFilter))
     } finally {
       setLoading(false)
     }
+  }
+
+  const filterDemoDocuments = (search: string, type: string) => {
+    return DEMO_DOCUMENTS.filter(doc => {
+      const matchesType = !type || doc.type === type
+      const matchesSearch = !search ||
+        doc.title.toLowerCase().includes(search.toLowerCase()) ||
+        doc.citation?.toLowerCase().includes(search.toLowerCase()) ||
+        doc.summary?.toLowerCase().includes(search.toLowerCase())
+      return matchesType && matchesSearch
+    })
   }
 
   return (
@@ -89,9 +136,8 @@ export default function DocumentsPage() {
           {/* Document List */}
           <div className="divide-y divide-vulcan-700/50">
             {loading ? (
-              <div className="p-12 text-center">
-                <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                <p className="text-sm text-vulcan-400">Loading documents...</p>
+              <div className="p-4">
+                <DocumentListSkeleton count={8} />
               </div>
             ) : documents.length === 0 ? (
               <div className="p-12 text-center">

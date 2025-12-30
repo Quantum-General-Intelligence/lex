@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { ZoomIn, ZoomOut, Maximize2, RefreshCw, X, ArrowRight, ArrowLeft, FileText, ChevronRight, Link2, Search } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, RefreshCw, X, ArrowRight, ArrowLeft, FileText, ChevronRight, Link2, Search, Loader2 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { NODE_COLORS, NODE_ICONS, RELATIONSHIP_LABELS } from '@/constants/legalNodeConfig'
 import { DEMO_GRAPH_DATA, DEMO_NODE_DETAILS } from '@/constants/demoData'
