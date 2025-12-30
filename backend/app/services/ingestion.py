@@ -1,5 +1,6 @@
 """Document ingestion service for processing legal documents."""
 
+import logging
 import re
 import io
 from typing import Optional
@@ -10,6 +11,7 @@ from app.services.rag import RAGService
 from app.core.database import neo4j_conn
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 
 class DocumentParser:
@@ -335,7 +337,7 @@ class IngestionService:
             return bool(result)
 
         except Exception as e:
-            print(f"Failed to create graph node: {e}")
+            logger.error(f"Failed to create graph node: {e}")
             return False
 
     async def process_document(
@@ -383,7 +385,7 @@ class IngestionService:
                 metadata=metadata,
             )
         except Exception as e:
-            print(f"Failed to add to vector store: {e}")
+            logger.error(f"Failed to add to vector store: {e}")
 
         # Create graph node
         graph_created = False

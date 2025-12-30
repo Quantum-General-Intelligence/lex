@@ -1,3 +1,4 @@
+import logging
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 from neo4j import AsyncGraphDatabase
@@ -9,6 +10,7 @@ from contextlib import asynccontextmanager
 from app.core.config import get_settings
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 
 # SQLAlchemy Base
@@ -33,7 +35,7 @@ def get_engine():
                 max_overflow=10,
             )
         except Exception as e:
-            print(f"Failed to create database engine: {e}")
+            logger.warning(f"Failed to create database engine: {e}")
             return None
     return _engine
 
@@ -85,7 +87,7 @@ class Neo4jConnection:
             )
             self._connected = True
         except Exception as e:
-            print(f"Neo4j connection failed: {e}")
+            logger.warning(f"Neo4j connection failed: {e}")
             self._connected = False
 
     async def close(self):
@@ -127,7 +129,7 @@ def get_chroma_client():
             settings=ChromaSettings(anonymized_telemetry=False),
         )
     except Exception as e:
-        print(f"ChromaDB connection failed: {e}")
+        logger.warning(f"ChromaDB connection failed: {e}")
         return None
 
 
@@ -142,7 +144,7 @@ async def get_redis():
         try:
             redis_client = redis.from_url(settings.redis_url, decode_responses=True)
         except Exception as e:
-            print(f"Redis connection failed: {e}")
+            logger.warning(f"Redis connection failed: {e}")
             return None
     return redis_client
 
@@ -155,9 +157,9 @@ async def init_databases():
         try:
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
-            print("PostgreSQL connected successfully")
+            logger.info("PostgreSQL connected successfully")
         except Exception as e:
-            print(f"PostgreSQL connection failed (ok for demo): {e}")
+            logger.warning(f"PostgreSQL connection failed (ok for demo): {e}")
 
     # Connect to Neo4j
     try:
@@ -165,9 +167,9 @@ async def init_databases():
         if neo4j_conn._connected:
             # Initialize Neo4j schema
             await init_neo4j_schema()
-            print("Neo4j connected successfully")
+            logger.info("Neo4j connected successfully")
     except Exception as e:
-        print(f"Neo4j connection failed (ok for demo): {e}")
+        logger.warning(f"Neo4j connection failed (ok for demo): {e}")
 
 
 async def init_neo4j_schema():

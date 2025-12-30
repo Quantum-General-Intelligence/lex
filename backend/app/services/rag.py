@@ -1,5 +1,6 @@
 """RAG service for semantic search and question answering."""
 
+import logging
 from typing import Optional
 import httpx
 
@@ -7,6 +8,7 @@ from app.core.config import get_settings
 from app.core.database import get_chroma_client, neo4j_conn
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 
 class RAGService:
@@ -32,7 +34,7 @@ class RAGService:
                     metadata={"description": "Legal document chunks for RAG"},
                 )
             except Exception as e:
-                print(f"Failed to get ChromaDB collection: {e}")
+                logger.warning(f"Failed to get ChromaDB collection: {e}")
         return self._collection
 
     @property
@@ -92,7 +94,7 @@ class RAGService:
 
             return search_results
         except Exception as e:
-            print(f"Search failed: {e}")
+            logger.error(f"Search failed: {e}")
             return []
 
     async def add_document(
@@ -119,7 +121,7 @@ class RAGService:
             )
             return len(chunks)
         except Exception as e:
-            print(f"Failed to add document: {e}")
+            logger.error(f"Failed to add document: {e}")
             return 0
 
     async def generate_answer(

@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { ZoomIn, ZoomOut, Maximize2, RefreshCw, X, ArrowRight, ArrowLeft, FileText, Loader2, ChevronRight, Link2 } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, RefreshCw, X, ArrowRight, ArrowLeft, FileText, ChevronRight, Link2, Search } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { NODE_COLORS, NODE_ICONS, RELATIONSHIP_LABELS } from '@/constants/legalNodeConfig'
 import { DEMO_GRAPH_DATA, DEMO_NODE_DETAILS } from '@/constants/demoData'
 import { API_BASE_URL } from '@/lib/api'
+import { NodeDetailsSkeleton, GraphSkeleton } from '@/components/Skeleton'
 
 // Dynamically import force graph to avoid SSR issues
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false })
@@ -74,7 +75,11 @@ export function GraphViewer() {
   const [loading, setLoading] = useState(false)
   const [authorityChain, setAuthorityChain] = useState<AuthorityChainNode[]>([])
   const [loadingChain, setLoadingChain] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<GraphNode[]>([])
+  const [showSearch, setShowSearch] = useState(false)
   const graphRef = useRef<any>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   const fetchGraphData = async () => {
     setLoading(true)
@@ -228,6 +233,63 @@ export function GraphViewer() {
     fetchGraphData()
   }, [])
 
+  // Search functionality
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      const results = graphData.nodes.filter(
+        node =>
+          node.title.toLowerCase().includes(query) ||
+          node.citation?.toLowerCase().includes(query) ||
+          node.type.toLowerCase().includes(query)
+      )
+      setSearchResults(results.slice(0, 10))
+    } else {
+      setSearchResults([])
+    }
+  }, [searchQuery, graphData.nodes])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Escape to close panels or search
+      if (e.key === 'Escape') {
+        if (showSearch) {
+          setShowSearch(false)
+          setSearchQuery('')
+        } else if (selectedNode) {
+          handleCloseDetails()
+        }
+      }
+      // Cmd/Ctrl + K to open search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setShowSearch(true)
+        setTimeout(() => searchInputRef.current?.focus(), 100)
+      }
+      // Cmd/Ctrl + F to fit view
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f' && !showSearch) {
+        e.preventDefault()
+        handleFitView()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showSearch, selectedNode])
+
+  const handleSearchSelect = (node: GraphNode) => {
+    setShowSearch(false)
+    setSearchQuery('')
+    setSelectedNode(node)
+    fetchNodeDetails(node.id)
+    fetchAuthorityChain(node.id, node.type)
+    if (graphRef.current && node.x !== undefined) {
+      graphRef.current.centerAt(node.x, node.y, 1000)
+      graphRef.current.zoom(2, 1000)
+    }
+  }
+
   const handleNodeClick = useCallback((node: any) => {
     setSelectedNode(node as GraphNode)
     fetchNodeDetails(node.id)
@@ -291,14 +353,14 @@ export function GraphViewer() {
   const NodeIcon = selectedNode ? NODE_ICONS[selectedNode.type] || FileText : FileText
 
   return (
-    <div className="flex gap-4 w-full">
+    <div className="flex flex-col lg:flex-row gap-4 w-full relative">
       {/* Graph Container */}
-      <div className={`flex-1 min-w-0 space-y-4 ${selectedNode ? 'max-w-[60%]' : ''}`}>
+      <div className={`flex-1 min-w-0 space-y-4 ${selectedNode ? 'lg:max-w-[60%]' : ''}`}>
         {/* Controls */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
             <h3 className="text-sm font-semibold text-white">Knowledge Graph</h3>
-            <span className="text-xs text-vulcan-400">
+            <span className="text-xs text-vulcan-400 hidden sm:inline">
               {graphData.nodes.length} nodes, {graphData.links.length} relationships
             </span>
             <button
@@ -310,17 +372,79 @@ export function GraphViewer() {
             </button>
           </div>
           <div className="flex items-center gap-1">
+            <button
+              onClick={() => {
+                setShowSearch(true)
+                setTimeout(() => searchInputRef.current?.focus(), 100)
+              }}
+              className="p-2 hover:bg-vulcan-700 rounded-lg transition-colors group"
+              title="Search (⌘K)"
+            >
+              <Search className="w-4 h-4 text-vulcan-400 group-hover:text-white" />
+            </button>
             <button onClick={handleZoomOut} className="p-2 hover:bg-vulcan-700 rounded-lg transition-colors">
               <ZoomOut className="w-4 h-4 text-vulcan-400" />
             </button>
             <button onClick={handleZoomIn} className="p-2 hover:bg-vulcan-700 rounded-lg transition-colors">
               <ZoomIn className="w-4 h-4 text-vulcan-400" />
             </button>
-            <button onClick={handleFitView} className="p-2 hover:bg-vulcan-700 rounded-lg transition-colors">
+            <button onClick={handleFitView} className="p-2 hover:bg-vulcan-700 rounded-lg transition-colors" title="Fit to view (⌘F)">
               <Maximize2 className="w-4 h-4 text-vulcan-400" />
             </button>
           </div>
         </div>
+
+        {/* Search Overlay */}
+        {showSearch && (
+          <div className="absolute inset-0 z-50 bg-vulcan-900/80 backdrop-blur-sm flex items-start justify-center pt-20">
+            <div className="w-full max-w-lg bg-vulcan-800 rounded-xl border border-vulcan-700 shadow-xl">
+              <div className="flex items-center gap-3 p-3 border-b border-vulcan-700">
+                <Search className="w-5 h-5 text-vulcan-400" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search nodes by title, citation, or type..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 bg-transparent text-white placeholder-vulcan-500 outline-none"
+                />
+                <kbd className="hidden sm:inline-block px-2 py-0.5 text-xs text-vulcan-400 bg-vulcan-700 rounded">ESC</kbd>
+              </div>
+              {searchResults.length > 0 && (
+                <div className="max-h-80 overflow-y-auto">
+                  {searchResults.map((node) => (
+                    <button
+                      key={node.id}
+                      onClick={() => handleSearchSelect(node)}
+                      className="w-full flex items-center gap-3 p-3 hover:bg-vulcan-700/50 transition-colors text-left"
+                    >
+                      <div
+                        className="w-3 h-3 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: NODE_COLORS[node.type] || '#64748b' }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white truncate">{node.title}</p>
+                        <p className="text-xs text-vulcan-400">
+                          {node.type}{node.citation ? ` • ${node.citation}` : ''}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {searchQuery && searchResults.length === 0 && (
+                <div className="p-6 text-center text-vulcan-400 text-sm">
+                  No nodes found matching &quot;{searchQuery}&quot;
+                </div>
+              )}
+              {!searchQuery && (
+                <div className="p-4 text-center text-vulcan-500 text-sm">
+                  Start typing to search...
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Legend */}
         <div className="flex flex-wrap gap-3 text-xs">
@@ -383,7 +507,7 @@ export function GraphViewer() {
 
       {/* Details Panel */}
       {selectedNode && (
-        <div className="w-[40%] min-w-[350px] bg-vulcan-800/50 backdrop-blur-sm rounded-xl border border-vulcan-700/50 overflow-hidden flex flex-col h-[calc(100vh-320px)] min-h-[400px] max-h-[700px]">
+        <div className="fixed inset-0 z-40 lg:relative lg:inset-auto lg:z-auto lg:w-[40%] lg:min-w-[350px] bg-vulcan-800 lg:bg-vulcan-800/50 backdrop-blur-sm lg:rounded-xl border-l lg:border border-vulcan-700/50 overflow-hidden flex flex-col h-full lg:h-[calc(100vh-320px)] lg:min-h-[400px] lg:max-h-[700px]">
           {/* Header */}
           <div className="p-4 border-b border-vulcan-700/50 flex items-start justify-between">
             <div className="flex items-start gap-3">
@@ -481,10 +605,7 @@ export function GraphViewer() {
           {/* Content */}
           <div className="flex-1 overflow-y-auto">
             {loadingDetails ? (
-              <div className="p-8 text-center">
-                <Loader2 className="w-6 h-6 animate-spin mx-auto text-vulcan-400" />
-                <p className="text-sm text-vulcan-400 mt-2">Loading details...</p>
-              </div>
+              <NodeDetailsSkeleton />
             ) : nodeDetails ? (
               <div className="divide-y divide-vulcan-700/50">
                 {/* Summary */}

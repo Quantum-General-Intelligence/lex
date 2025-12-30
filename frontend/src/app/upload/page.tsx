@@ -2,6 +2,8 @@
 
 import { Upload, FileText, CheckCircle, XCircle, Clock, AlertCircle, Sparkles, BookOpen, GitBranch, Database } from 'lucide-react'
 import { useState } from 'react'
+import { PageHeader } from '@/components/PageHeader'
+import { API_BASE_URL } from '@/lib/api'
 
 interface UploadedFile {
   name: string
@@ -61,7 +63,7 @@ export default function UploadPage() {
         const formData = new FormData()
         formData.append('file', file)
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/documents/ingest`, {
+        const res = await fetch(`${API_BASE_URL}/api/documents/ingest`, {
           method: 'POST',
           body: formData,
         })
@@ -115,22 +117,12 @@ export default function UploadPage() {
 
   return (
     <div className="min-h-screen bg-vulcan-900">
-      {/* Header */}
-      <header className="bg-vulcan-900/80 backdrop-blur-xl border-b border-vulcan-700/50">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-vulcan-800 border border-vulcan-600 rounded-xl flex items-center justify-center">
-              <Upload className="w-5 h-5 text-rose-400" />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-white">Ingest</h1>
-              <p className="text-sm text-vulcan-400">
-                Upload documents to the knowledge base
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+      <PageHeader
+        icon={Upload}
+        iconColor="text-rose-400"
+        title="Ingest"
+        description="Upload documents to the knowledge base"
+      />
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { FileText, Search, Filter, ExternalLink } from 'lucide-react'
+import { NODE_COLOR_CLASSES } from '@/constants/legalNodeConfig'
+import { PageHeader } from '@/components/PageHeader'
+import { API_BASE_URL } from '@/lib/api'
 
 interface LegalDocument {
   id: string
@@ -11,14 +14,6 @@ interface LegalDocument {
   jurisdiction: string
   agency?: string
   summary?: string
-}
-
-const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
-  Statute: { bg: 'bg-blue-500/10 border-blue-500/20', text: 'text-blue-400' },
-  Regulation: { bg: 'bg-purple-500/10 border-purple-500/20', text: 'text-purple-400' },
-  CaseLaw: { bg: 'bg-emerald-500/10 border-emerald-500/20', text: 'text-emerald-400' },
-  ExecutiveOrder: { bg: 'bg-red-500/10 border-red-500/20', text: 'text-red-400' },
-  Agency: { bg: 'bg-amber-500/10 border-amber-500/20', text: 'text-amber-400' },
 }
 
 export default function DocumentsPage() {
@@ -39,9 +34,7 @@ export default function DocumentsPage() {
       if (searchTerm) params.append('search', searchTerm)
       params.append('limit', '50')
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/graph/nodes?${params}`
-      )
+      const res = await fetch(`${API_BASE_URL}/api/graph/nodes?${params}`)
       if (res.ok) {
         const data = await res.json()
         setDocuments(data)
@@ -55,22 +48,12 @@ export default function DocumentsPage() {
 
   return (
     <div className="min-h-screen bg-vulcan-900">
-      {/* Header */}
-      <header className="bg-vulcan-900/80 backdrop-blur-xl border-b border-vulcan-700/50">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-vulcan-800 border border-vulcan-600 rounded-xl flex items-center justify-center">
-              <FileText className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-white">Document Library</h1>
-              <p className="text-sm text-vulcan-400">
-                Legal document library
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+      <PageHeader
+        icon={FileText}
+        iconColor="text-emerald-400"
+        title="Document Library"
+        description="Legal document library"
+      />
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="bg-vulcan-800/50 backdrop-blur-sm rounded-xl border border-vulcan-700/50 overflow-hidden">
@@ -144,8 +127,8 @@ export default function DocumentsPage() {
                     </div>
                     <span
                       className={`px-2.5 py-1 text-xs font-medium rounded-full ml-4 flex-shrink-0 border ${
-                        TYPE_COLORS[doc.type]?.bg || 'bg-vulcan-700/50'
-                      } ${TYPE_COLORS[doc.type]?.text || 'text-vulcan-400'}`}
+                        NODE_COLOR_CLASSES[doc.type]?.bg || 'bg-vulcan-700/50'
+                      } ${NODE_COLOR_CLASSES[doc.type]?.border || ''} ${NODE_COLOR_CLASSES[doc.type]?.text || 'text-vulcan-400'}`}
                     >
                       {doc.type}
                     </span>
