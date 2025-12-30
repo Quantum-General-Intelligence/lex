@@ -1,46 +1,44 @@
-import { withAuth } from 'next-auth/middleware'
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 
-export default withAuth(
-  function middleware(req) {
-    return NextResponse.next()
-  },
-  {
-    callbacks: {
-      authorized: ({ token, req }) => {
-        // Define protected routes that require authentication
-        const protectedRoutes = [
-          '/query',
-          '/documents',
-          '/graph',
-          '/sources',
-          '/upload',
-          '/compliance',
-          '/comments',
-          '/settings',
-        ]
+// Define protected routes that require authentication
+const protectedRoutes = [
+  '/query',
+  '/documents',
+  '/graph',
+  '/sources',
+  '/upload',
+  '/compliance',
+  '/comments',
+  '/settings',
+]
 
-        const { pathname } = req.nextUrl
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl
 
-        // Check if the current path starts with any protected route
-        const isProtectedRoute = protectedRoutes.some(
-          (route) => pathname === route || pathname.startsWith(`${route}/`)
-        )
+  // Check if the current path is a protected route
+  const isProtectedRoute = protectedRoutes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  )
 
-        // If it's a protected route, require authentication
-        if (isProtectedRoute) {
-          return !!token
-        }
+  if (isProtectedRoute) {
+    // Get the token from the session cookie
+    const token = await getToken({
+      req,
+      secret: process.env.NEXTAUTH_SECRET,
+    })
 
-        // Allow access to public routes
-        return true
-      },
-    },
-    pages: {
-      signIn: '/login',
-    },
+    // If no token, redirect to login
+    if (!token) {
+      const loginUrl = new URL('/login', req.url)
+      loginUrl.searchParams.set('callbackUrl', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
   }
-)
+
+  return NextResponse.next()
+}
 
 export const config = {
   // Match all routes except static files, api routes, and _next
