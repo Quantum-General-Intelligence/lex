@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { FileText, Search, Filter, ExternalLink, Upload, X, Plus } from 'lucide-react'
 import { NODE_COLOR_CLASSES } from '@/constants/legalNodeConfig'
 import { PageHeader } from '@/components/PageHeader'
+import { ConstellationBackground } from '@/components/ConstellationBackground'
 import { API_BASE_URL } from '@/lib/api'
 import { DocumentListSkeleton } from '@/components/Skeleton'
 import { DocumentUpload } from '@/components/DocumentUpload'
@@ -96,7 +97,18 @@ export default function DocumentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-vulcan-900">
+    <div className="min-h-screen bg-vulcan-900 relative overflow-hidden">
+      {/* Emerald-themed constellation */}
+      <ConstellationBackground
+        nodeCount={15}
+        connectionDensity={0.2}
+        colorScheme="blue"
+        interactive={false}
+        speed={0.3}
+        showOrbs={true}
+        showGrid={true}
+        opacity={0.3}
+      />
       <PageHeader
         icon={FileText}
         iconColor="text-emerald-400"

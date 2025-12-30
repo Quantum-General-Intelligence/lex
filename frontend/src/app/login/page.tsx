@@ -3,8 +3,10 @@
 import { Suspense, useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Loader2, AlertCircle, Scale, Lock, Mail } from 'lucide-react'
+import { Loader2, AlertCircle, Lock, Mail } from 'lucide-react'
 import Link from 'next/link'
+import { ConstellationBackground } from '@/components/ConstellationBackground'
+import { LexLogo } from '@/components/LexLogo'
 
 function LoginForm() {
   const router = useRouter()
@@ -56,8 +58,8 @@ function LoginForm() {
     <div className="w-full max-w-md">
       {/* Logo and Header */}
       <div className="text-center mb-8">
-        <div className="w-16 h-16 rounded-2xl bg-vulcan-800 border border-vulcan-600 flex items-center justify-center mx-auto mb-4">
-          <Scale className="w-8 h-8 text-accent" />
+        <div className="mx-auto mb-4 flex justify-center">
+          <LexLogo size={64} />
         </div>
         <h1 className="text-2xl font-bold text-white">Welcome to Lex</h1>
         <p className="text-vulcan-400 mt-2">Sign in to access the legal intelligence platform</p>
@@ -218,7 +220,18 @@ function LoginLoading() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-vulcan-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-vulcan-900 flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Subtle constellation background */}
+      <ConstellationBackground
+        nodeCount={20}
+        connectionDensity={0.25}
+        colorScheme="blue"
+        interactive={false}
+        speed={0.5}
+        showOrbs={true}
+        showGrid={false}
+        opacity={0.6}
+      />
       <Suspense fallback={<LoginLoading />}>
         <LoginForm />
       </Suspense>

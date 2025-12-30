@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { ChevronDown, Menu, X, User, LogOut } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
+import { LexLogo } from './LexLogo'
 
 const navigation = [
   { name: 'Platform', href: '/' },
@@ -37,9 +38,7 @@ export function Navigation() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-vulcan-800 border border-vulcan-600 flex items-center justify-center">
-              <span className="text-accent font-bold text-xl">L</span>
-            </div>
+            <LexLogo size={36} />
           </Link>
 
           {/* Desktop Navigation */}

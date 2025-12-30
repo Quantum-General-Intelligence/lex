@@ -15,6 +15,8 @@ import {
 } from 'lucide-react'
 import { API_BASE_URL } from '@/lib/api'
 import { ModuleCard } from '@/components/ModuleCard'
+import { ConstellationBackground } from '@/components/ConstellationBackground'
+import { LexLogo } from '@/components/LexLogo'
 
 const DEMO_QUERIES = [
   {
@@ -84,120 +86,16 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-vulcan-900 relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Gradient orbs */}
-        <div className="absolute top-1/4 -right-32 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 -left-32 w-96 h-96 bg-accent/3 rounded-full blur-3xl" />
-
-        {/* Network graph pattern - dots */}
-        <svg className="absolute inset-0 w-full h-full opacity-30" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="network-dots" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
-              <circle cx="30" cy="30" r="1" fill="#3b82f6" opacity="0.3" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#network-dots)" />
-        </svg>
-
-        {/* Animated connection lines */}
-        <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            {/* Animated gradient for data flow effect */}
-            <linearGradient id="flowGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0">
-                <animate attributeName="offset" values="-0.5;1" dur="3s" repeatCount="indefinite" />
-              </stop>
-              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.6">
-                <animate attributeName="offset" values="0;1.5" dur="3s" repeatCount="indefinite" />
-              </stop>
-              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0">
-                <animate attributeName="offset" values="0.5;2" dur="3s" repeatCount="indefinite" />
-              </stop>
-            </linearGradient>
-            <linearGradient id="flowGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0">
-                <animate attributeName="offset" values="-0.5;1" dur="4s" repeatCount="indefinite" />
-              </stop>
-              <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.5">
-                <animate attributeName="offset" values="0;1.5" dur="4s" repeatCount="indefinite" />
-              </stop>
-              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0">
-                <animate attributeName="offset" values="0.5;2" dur="4s" repeatCount="indefinite" />
-              </stop>
-            </linearGradient>
-          </defs>
-
-          {/* Static connection lines */}
-          <line x1="10%" y1="20%" x2="30%" y2="35%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.15" />
-          <line x1="30%" y1="35%" x2="50%" y2="25%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.15" />
-          <line x1="50%" y1="25%" x2="70%" y2="40%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.15" />
-          <line x1="70%" y1="40%" x2="90%" y2="30%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.15" />
-          <line x1="20%" y1="60%" x2="40%" y2="70%" stroke="#8b5cf6" strokeWidth="0.5" opacity="0.12" />
-          <line x1="40%" y1="70%" x2="60%" y2="65%" stroke="#8b5cf6" strokeWidth="0.5" opacity="0.12" />
-          <line x1="60%" y1="65%" x2="80%" y2="75%" stroke="#8b5cf6" strokeWidth="0.5" opacity="0.12" />
-          <line x1="30%" y1="35%" x2="40%" y2="70%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.1" />
-          <line x1="50%" y1="25%" x2="60%" y2="65%" stroke="#3b82f6" strokeWidth="0.5" opacity="0.1" />
-
-          {/* Animated flow lines */}
-          <line x1="10%" y1="20%" x2="30%" y2="35%" stroke="url(#flowGradient1)" strokeWidth="2" />
-          <line x1="30%" y1="35%" x2="50%" y2="25%" stroke="url(#flowGradient1)" strokeWidth="2" />
-          <line x1="50%" y1="25%" x2="70%" y2="40%" stroke="url(#flowGradient1)" strokeWidth="2" />
-          <line x1="20%" y1="60%" x2="40%" y2="70%" stroke="url(#flowGradient2)" strokeWidth="2" />
-          <line x1="40%" y1="70%" x2="60%" y2="65%" stroke="url(#flowGradient2)" strokeWidth="2" />
-
-          {/* Pulsing nodes - primary row */}
-          <circle cx="10%" cy="20%" r="4" fill="#3b82f6" opacity="0.6">
-            <animate attributeName="r" values="4;6;4" dur="2s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.6;0.3;0.6" dur="2s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="30%" cy="35%" r="5" fill="#3b82f6" opacity="0.7">
-            <animate attributeName="r" values="5;7;5" dur="2.5s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.7;0.4;0.7" dur="2.5s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="50%" cy="25%" r="4" fill="#3b82f6" opacity="0.5">
-            <animate attributeName="r" values="4;6;4" dur="3s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.5;0.3;0.5" dur="3s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="70%" cy="40%" r="6" fill="#3b82f6" opacity="0.6">
-            <animate attributeName="r" values="6;8;6" dur="2.2s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.6;0.35;0.6" dur="2.2s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="90%" cy="30%" r="4" fill="#3b82f6" opacity="0.4">
-            <animate attributeName="r" values="4;5;4" dur="2.8s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.4;0.25;0.4" dur="2.8s" repeatCount="indefinite" />
-          </circle>
-
-          {/* Pulsing nodes - secondary row */}
-          <circle cx="20%" cy="60%" r="3" fill="#8b5cf6" opacity="0.5">
-            <animate attributeName="r" values="3;5;3" dur="2.7s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.5;0.3;0.5" dur="2.7s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="40%" cy="70%" r="4" fill="#8b5cf6" opacity="0.6">
-            <animate attributeName="r" values="4;6;4" dur="2.3s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.6;0.35;0.6" dur="2.3s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="60%" cy="65%" r="3" fill="#8b5cf6" opacity="0.45">
-            <animate attributeName="r" values="3;5;3" dur="3.1s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.45;0.25;0.45" dur="3.1s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="80%" cy="75%" r="3" fill="#8b5cf6" opacity="0.4">
-            <animate attributeName="r" values="3;4;3" dur="2.9s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.4;0.25;0.4" dur="2.9s" repeatCount="indefinite" />
-          </circle>
-
-          {/* Center glow effect */}
-          <circle cx="50%" cy="45%" r="100" fill="url(#centerGlow)" opacity="0.15">
-            <animate attributeName="r" values="100;120;100" dur="4s" repeatCount="indefinite" />
-          </circle>
-          <defs>
-            <radialGradient id="centerGlow">
-              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-            </radialGradient>
-          </defs>
-        </svg>
-      </div>
+      {/* Interactive Constellation Background */}
+      <ConstellationBackground
+        nodeCount={35}
+        connectionDensity={0.4}
+        colorScheme="mixed"
+        interactive={true}
+        speed={1}
+        showOrbs={true}
+        showGrid={true}
+      />
 
       {/* Hero Section */}
       <section className="relative pt-24 pb-20 px-6">
@@ -408,10 +306,8 @@ export default function Home() {
       {/* Footer */}
       <footer className="relative py-12 px-6 border-t border-vulcan-800">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-vulcan-800 border border-vulcan-600 flex items-center justify-center">
-              <span className="text-accent font-bold">L</span>
-            </div>
+          <div className="flex items-center gap-3">
+            <LexLogo size={32} animated={false} />
             <span className="text-vulcan-400 text-sm">Lex - Legal Intelligence Platform</span>
           </div>
           <div className="text-vulcan-500 text-sm">

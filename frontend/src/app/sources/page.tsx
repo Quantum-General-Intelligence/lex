@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Database, Search, Download, CheckCircle, AlertCircle, Loader2, ExternalLink, FileText, Scale, Building } from 'lucide-react'
 import { PageHeader } from '@/components/PageHeader'
+import { ConstellationBackground } from '@/components/ConstellationBackground'
 import { API_BASE_URL } from '@/lib/api'
 
 interface SourceStatus {
@@ -129,7 +130,18 @@ export default function SourcesPage() {
     : []
 
   return (
-    <div className="min-h-screen bg-vulcan-900">
+    <div className="min-h-screen bg-vulcan-900 relative overflow-hidden">
+      {/* Purple constellation for data sources */}
+      <ConstellationBackground
+        nodeCount={18}
+        connectionDensity={0.25}
+        colorScheme="purple"
+        interactive={false}
+        speed={0.35}
+        showOrbs={true}
+        showGrid={true}
+        opacity={0.35}
+      />
       <PageHeader
         icon={Database}
         iconColor="text-purple-400"

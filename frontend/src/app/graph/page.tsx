@@ -2,11 +2,23 @@
 
 import { GraphViewer } from '@/components/GraphViewer'
 import { PageHeader } from '@/components/PageHeader'
+import { ConstellationBackground } from '@/components/ConstellationBackground'
 import { GitBranch } from 'lucide-react'
 
 export default function GraphPage() {
   return (
-    <div className="min-h-screen bg-vulcan-900">
+    <div className="min-h-screen bg-vulcan-900 relative overflow-hidden">
+      {/* Purple-themed constellation for graph page */}
+      <ConstellationBackground
+        nodeCount={20}
+        connectionDensity={0.35}
+        colorScheme="purple"
+        interactive={false}
+        speed={0.4}
+        showOrbs={true}
+        showGrid={true}
+        opacity={0.35}
+      />
       <PageHeader
         icon={GitBranch}
         iconColor="text-purple-400"

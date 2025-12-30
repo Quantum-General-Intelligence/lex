@@ -571,13 +571,21 @@ export function GraphViewer() {
             graphData={graphData}
             nodeLabel={(node: any) => `${node.title}${node.citation ? ` (${node.citation})` : ''}`}
             nodeColor={(node: any) => NODE_COLORS[node.type] || '#64748b'}
-            nodeRelSize={6}
+            nodeRelSize={8}
             linkColor={() => '#4a5568'}
             linkWidth={1.5}
             linkDirectionalArrowLength={5}
             linkDirectionalArrowRelPos={1}
             linkLabel={(link: any) => link.type}
             onNodeClick={handleNodeClick}
+            onNodeDragEnd={(node: any) => {
+              // Fix node position after drag
+              node.fx = node.x
+              node.fy = node.y
+            }}
+            enableNodeDrag={true}
+            enableZoomInteraction={true}
+            enablePanInteraction={true}
             cooldownTicks={100}
             backgroundColor="#0a0e1a"
             nodeCanvasObject={(node: any, ctx, globalScale) => {

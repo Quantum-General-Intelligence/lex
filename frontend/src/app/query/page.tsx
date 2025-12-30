@@ -4,6 +4,7 @@ import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { QueryInterface } from '@/components/QueryInterface'
 import { PageHeader } from '@/components/PageHeader'
+import { ConstellationBackground } from '@/components/ConstellationBackground'
 import { Search } from 'lucide-react'
 
 function QueryContent() {
@@ -37,7 +38,18 @@ function QueryContent() {
 
 export default function QueryPage() {
   return (
-    <div className="min-h-screen bg-vulcan-900">
+    <div className="min-h-screen bg-vulcan-900 relative overflow-hidden">
+      {/* Subtle constellation background */}
+      <ConstellationBackground
+        nodeCount={15}
+        connectionDensity={0.2}
+        colorScheme="blue"
+        interactive={false}
+        speed={0.3}
+        showOrbs={true}
+        showGrid={true}
+        opacity={0.4}
+      />
       <PageHeader
         icon={Search}
         title="Regulatory Query"
