@@ -22,18 +22,16 @@ function LoginForm() {
     setLoading(true)
     setLoginError(null)
 
-    const result = await signIn('credentials', {
-      email,
-      password,
-      redirect: false,
-      callbackUrl,
-    })
-
-    if (result?.error) {
+    try {
+      // Use redirect: true for simpler flow
+      await signIn('credentials', {
+        email,
+        password,
+        callbackUrl,
+      })
+    } catch {
       setLoginError('Invalid email or password')
       setLoading(false)
-    } else if (result?.ok) {
-      router.push(callbackUrl)
     }
   }
 
@@ -41,18 +39,16 @@ function LoginForm() {
     setLoading(true)
     setLoginError(null)
 
-    const result = await signIn('credentials', {
-      email: demoEmail,
-      password: demoPassword,
-      redirect: false,
-      callbackUrl,
-    })
-
-    if (result?.error) {
+    try {
+      // Use redirect: true for simpler flow
+      await signIn('credentials', {
+        email: demoEmail,
+        password: demoPassword,
+        callbackUrl,
+      })
+    } catch {
       setLoginError('Demo login failed')
       setLoading(false)
-    } else if (result?.ok) {
-      router.push(callbackUrl)
     }
   }
 
