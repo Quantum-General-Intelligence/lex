@@ -14,6 +14,7 @@ const navigation = [
     children: [
       { name: 'Knowledge Graph', href: '/graph', description: 'Explore legal relationships' },
       { name: 'Document Library', href: '/documents', description: 'Browse legal corpus' },
+      { name: 'Data Sources', href: '/sources', description: 'Import from official sources' },
       { name: 'Compliance', href: '/compliance', description: 'Check policy compliance' },
       { name: 'Comments', href: '/comments', description: 'Analyze public feedback' },
       { name: 'Ingest', href: '/upload', description: 'Upload documents' },
