@@ -1493,7 +1493,7 @@ def seed_chromadb():
 async def main():
     """Run all seeding operations."""
     print("=" * 60)
-    print("Vulcan - Legal Cartography Demo Data Seeder")
+    print("Lex - Legal Cartography Demo Data Seeder")
     print("=" * 60)
 
     try:

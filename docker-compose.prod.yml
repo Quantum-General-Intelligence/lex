@@ -1,6 +1,6 @@
 version: '3.8'
 
-# Production Docker Compose for Vulcan
+# Production Docker Compose for Lex
 # Deploy with: docker-compose -f docker-compose.prod.yml up -d
 
 services:
@@ -25,10 +25,10 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - DATABASE_URL=postgresql+asyncpg://vulcan:vulcan@postgres:5432/vulcan
+      - DATABASE_URL=postgresql+asyncpg://lex:lex@postgres:5432/lex
       - NEO4J_URI=bolt://neo4j:7687
       - NEO4J_USER=neo4j
-      - NEO4J_PASSWORD=vulcanneo4j
+      - NEO4J_PASSWORD=lexneo4j
       - CHROMA_HOST=chromadb
       - CHROMA_PORT=8000
       - REDIS_URL=redis://redis:6379
@@ -45,9 +45,9 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      - POSTGRES_USER=vulcan
-      - POSTGRES_PASSWORD=vulcan
-      - POSTGRES_DB=vulcan
+      - POSTGRES_USER=lex
+      - POSTGRES_PASSWORD=lex
+      - POSTGRES_DB=lex
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -56,7 +56,7 @@ services:
   neo4j:
     image: neo4j:5.15-community
     environment:
-      - NEO4J_AUTH=neo4j/vulcanneo4j
+      - NEO4J_AUTH=neo4j/lexneo4j
       - NEO4J_PLUGINS=["apoc"]
     volumes:
       - neo4j_data:/data

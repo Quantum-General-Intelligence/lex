@@ -9,7 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Vulcan-inspired dark theme palette
+        // Dark theme palette
         'vulcan': {
           950: '#050709', // Deepest black
           900: '#0a0e1a', // Primary background

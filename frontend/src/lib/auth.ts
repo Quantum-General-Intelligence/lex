@@ -5,21 +5,21 @@ import type { NextAuthOptions } from 'next-auth'
 const DEMO_USERS = [
   {
     id: '1',
-    email: 'admin@vulcan.tech',
+    email: 'admin@lex.dev',
     name: 'Admin User',
     password: 'admin123',
     role: 'admin',
   },
   {
     id: '2',
-    email: 'analyst@vulcan.tech',
+    email: 'analyst@lex.dev',
     name: 'Legal Analyst',
     password: 'analyst123',
     role: 'analyst',
   },
   {
     id: '3',
-    email: 'demo@vulcan.tech',
+    email: 'demo@lex.dev',
     name: 'Demo User',
     password: 'demo123',
     role: 'viewer',
@@ -31,7 +31,7 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
-        email: { label: 'Email', type: 'email', placeholder: 'user@vulcan.tech' },
+        email: { label: 'Email', type: 'email', placeholder: 'user@lex.dev' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {

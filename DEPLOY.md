@@ -1,4 +1,4 @@
-# Vulcan Deployment Guide
+# Lex Deployment Guide
 
 Quick options for sharing with the team.
 

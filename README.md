@@ -1,6 +1,6 @@
 # Lex - Legal Cartography Platform
 
-An AI-powered legal intelligence platform that maps relationships between laws, regulations, and case law. Built as a demonstration of regulatory technology concepts similar to [Vulcan Technologies](https://vulcan-tech.com).
+An AI-powered legal intelligence platform that maps relationships between laws, regulations, and case law.
 
 ## Features
 

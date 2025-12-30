@@ -91,7 +91,7 @@ function LoginForm() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="user@vulcan.tech"
+                placeholder="user@lex.dev"
                 required
                 className="w-full pl-10 pr-4 py-2.5 bg-vulcan-900 border border-vulcan-600 rounded-lg text-white placeholder-vulcan-500 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
               />
@@ -142,14 +142,14 @@ function LoginForm() {
         {/* Demo Accounts */}
         <div className="space-y-3">
           <button
-            onClick={() => handleDemoLogin('admin@vulcan.tech', 'admin123')}
+            onClick={() => handleDemoLogin('admin@lex.dev', 'admin123')}
             disabled={loading}
             className="w-full p-3 bg-vulcan-900 hover:bg-vulcan-700/50 border border-vulcan-600 hover:border-vulcan-500 rounded-xl transition-colors text-left disabled:opacity-50"
           >
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-medium text-white text-sm">Admin User</div>
-                <div className="text-xs text-vulcan-400 mt-0.5">admin@vulcan.tech</div>
+                <div className="text-xs text-vulcan-400 mt-0.5">admin@lex.dev</div>
               </div>
               <span className="text-xs px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-full">
                 Admin
@@ -158,14 +158,14 @@ function LoginForm() {
           </button>
 
           <button
-            onClick={() => handleDemoLogin('analyst@vulcan.tech', 'analyst123')}
+            onClick={() => handleDemoLogin('analyst@lex.dev', 'analyst123')}
             disabled={loading}
             className="w-full p-3 bg-vulcan-900 hover:bg-vulcan-700/50 border border-vulcan-600 hover:border-vulcan-500 rounded-xl transition-colors text-left disabled:opacity-50"
           >
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-medium text-white text-sm">Legal Analyst</div>
-                <div className="text-xs text-vulcan-400 mt-0.5">analyst@vulcan.tech</div>
+                <div className="text-xs text-vulcan-400 mt-0.5">analyst@lex.dev</div>
               </div>
               <span className="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full">
                 Analyst
@@ -174,14 +174,14 @@ function LoginForm() {
           </button>
 
           <button
-            onClick={() => handleDemoLogin('demo@vulcan.tech', 'demo123')}
+            onClick={() => handleDemoLogin('demo@lex.dev', 'demo123')}
             disabled={loading}
             className="w-full p-3 bg-vulcan-900 hover:bg-vulcan-700/50 border border-vulcan-600 hover:border-vulcan-500 rounded-xl transition-colors text-left disabled:opacity-50"
           >
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-medium text-white text-sm">Demo User</div>
-                <div className="text-xs text-vulcan-400 mt-0.5">demo@vulcan.tech</div>
+                <div className="text-xs text-vulcan-400 mt-0.5">demo@lex.dev</div>
               </div>
               <span className="text-xs px-2 py-0.5 bg-vulcan-600 text-vulcan-300 rounded-full">
                 Viewer

@@ -1,7 +1,7 @@
 # Lex - Legal Cartography Platform
 ## Architecture & Technology Diagrams
 
-*Prepared for Vulcan Technologies Interview*
+*Technical Architecture Documentation*
 
 ---
 
