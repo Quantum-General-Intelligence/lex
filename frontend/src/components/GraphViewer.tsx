@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { ZoomIn, ZoomOut, Maximize2, RefreshCw, X, ArrowRight, ArrowLeft, FileText, ChevronRight, Link2, Search, Loader2 } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, RefreshCw, X, ArrowRight, ArrowLeft, FileText, ChevronRight, Link2, Search, Loader2, Expand, Plus } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { NODE_COLORS, NODE_ICONS, RELATIONSHIP_LABELS } from '@/constants/legalNodeConfig'
 import { DEMO_GRAPH_DATA, DEMO_NODE_DETAILS } from '@/constants/demoData'
@@ -78,6 +78,7 @@ export function GraphViewer() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<GraphNode[]>([])
   const [showSearch, setShowSearch] = useState(false)
+  const [expandingNode, setExpandingNode] = useState<string | null>(null)
   const graphRef = useRef<any>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
@@ -191,6 +192,113 @@ export function GraphViewer() {
     } finally {
       setLoadingChain(false)
     }
+  }
+
+  // Expand graph around a node - add its connected nodes to the visualization
+  const expandNode = async (nodeId: string) => {
+    setExpandingNode(nodeId)
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/graph/explore?center_node_id=${nodeId}&limit=20`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.nodes?.length > 0) {
+          // Merge new nodes with existing ones (avoid duplicates)
+          const existingNodeIds = new Set(graphData.nodes.map(n => n.id))
+          const newNodes = data.nodes.filter((n: GraphNode) => !existingNodeIds.has(n.id))
+
+          // Merge new links
+          const existingLinkKeys = new Set(
+            graphData.links.map(l => {
+              const source = typeof l.source === 'string' ? l.source : (l.source as any).id
+              const target = typeof l.target === 'string' ? l.target : (l.target as any).id
+              return `${source}-${target}-${l.type}`
+            })
+          )
+          const newLinks = (data.relationships || []).filter((r: GraphLink) => {
+            const key = `${r.source}-${r.target}-${r.type}`
+            return !existingLinkKeys.has(key)
+          })
+
+          if (newNodes.length > 0 || newLinks.length > 0) {
+            setGraphData(prev => ({
+              nodes: [...prev.nodes, ...newNodes],
+              links: [...prev.links, ...newLinks],
+            }))
+          }
+        }
+      } else {
+        // Fallback: expand using demo data relationships
+        expandNodeFromDemoData(nodeId)
+      }
+    } catch {
+      // Fallback: expand using demo data relationships
+      expandNodeFromDemoData(nodeId)
+    } finally {
+      setExpandingNode(null)
+    }
+  }
+
+  // Expand node using demo data when API is unavailable
+  const expandNodeFromDemoData = (nodeId: string) => {
+    const existingNodeIds = new Set(graphData.nodes.map(n => n.id))
+    const nodesToAdd: GraphNode[] = []
+    const linksToAdd: GraphLink[] = []
+
+    // Find all links involving this node in DEMO_DATA
+    for (const link of DEMO_DATA.links) {
+      const sourceId = typeof link.source === 'string' ? link.source : (link.source as any).id
+      const targetId = typeof link.target === 'string' ? link.target : (link.target as any).id
+
+      if (sourceId === nodeId || targetId === nodeId) {
+        // Add the connected node if not already in graph
+        const connectedId = sourceId === nodeId ? targetId : sourceId
+        if (!existingNodeIds.has(connectedId)) {
+          const connectedNode = DEMO_DATA.nodes.find(n => n.id === connectedId)
+          if (connectedNode) {
+            nodesToAdd.push(connectedNode)
+            existingNodeIds.add(connectedId)
+          }
+        }
+
+        // Add the link if source and target will both be in graph
+        const sourceInGraph = existingNodeIds.has(sourceId) || nodesToAdd.some(n => n.id === sourceId)
+        const targetInGraph = existingNodeIds.has(targetId) || nodesToAdd.some(n => n.id === targetId)
+        if (sourceInGraph && targetInGraph) {
+          const linkExists = graphData.links.some(l => {
+            const lSource = typeof l.source === 'string' ? l.source : (l.source as any).id
+            const lTarget = typeof l.target === 'string' ? l.target : (l.target as any).id
+            return lSource === sourceId && lTarget === targetId && l.type === link.type
+          })
+          if (!linkExists) {
+            linksToAdd.push({ source: sourceId, target: targetId, type: link.type })
+          }
+        }
+      }
+    }
+
+    if (nodesToAdd.length > 0 || linksToAdd.length > 0) {
+      setGraphData(prev => ({
+        nodes: [...prev.nodes, ...nodesToAdd],
+        links: [...prev.links, ...linksToAdd],
+      }))
+    }
+  }
+
+  // Check if a node can be expanded (has more connections than currently shown)
+  const canExpandNode = (nodeId: string): boolean => {
+    // In demo mode, check if the node has connections in DEMO_DATA that aren't in graphData
+    const existingNodeIds = new Set(graphData.nodes.map(n => n.id))
+    for (const link of DEMO_DATA.links) {
+      const sourceId = typeof link.source === 'string' ? link.source : (link.source as any).id
+      const targetId = typeof link.target === 'string' ? link.target : (link.target as any).id
+      if ((sourceId === nodeId || targetId === nodeId)) {
+        const connectedId = sourceId === nodeId ? targetId : sourceId
+        if (!existingNodeIds.has(connectedId)) {
+          return true
+        }
+      }
+    }
+    return false
   }
 
   // Build authority chain from demo data by traversing AUTHORIZES relationships backwards
@@ -544,12 +652,28 @@ export function GraphViewer() {
                 </div>
               </div>
             </div>
-            <button
-              onClick={handleCloseDetails}
-              className="p-1.5 text-vulcan-400 hover:text-white hover:bg-vulcan-700 rounded-lg transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              {canExpandNode(selectedNode.id) && (
+                <button
+                  onClick={() => expandNode(selectedNode.id)}
+                  disabled={expandingNode === selectedNode.id}
+                  className="p-1.5 text-vulcan-400 hover:text-accent hover:bg-vulcan-700 rounded-lg transition-colors disabled:opacity-50"
+                  title="Expand connected nodes"
+                >
+                  {expandingNode === selectedNode.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Expand className="w-4 h-4" />
+                  )}
+                </button>
+              )}
+              <button
+                onClick={handleCloseDetails}
+                className="p-1.5 text-vulcan-400 hover:text-white hover:bg-vulcan-700 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Authority Chain */}
@@ -646,26 +770,45 @@ export function GraphViewer() {
                             </span>
                           </div>
                           <div className="space-y-1.5 ml-5">
-                            {group.nodes.map((relNode, nodeIdx) => (
-                              <button
-                                key={nodeIdx}
-                                onClick={() => handleRelationshipNodeClick(relNode.id)}
-                                className="w-full text-left p-2 rounded-lg border border-vulcan-700/50 hover:border-vulcan-600 hover:bg-vulcan-700/30 transition-colors group"
-                              >
-                                <div className="flex items-center gap-2">
-                                  <div
-                                    className="w-2 h-2 rounded-full flex-shrink-0"
-                                    style={{ backgroundColor: NODE_COLORS[relNode.type] || '#64748b' }}
-                                  />
-                                  <span className="text-sm text-vulcan-200 group-hover:text-accent truncate">
-                                    {relNode.title}
-                                  </span>
+                            {group.nodes.map((relNode, nodeIdx) => {
+                              const isInGraph = graphData.nodes.some(n => n.id === relNode.id)
+                              return (
+                                <div
+                                  key={nodeIdx}
+                                  className="flex items-center gap-1"
+                                >
+                                  <button
+                                    onClick={() => {
+                                      if (isInGraph) {
+                                        handleRelationshipNodeClick(relNode.id)
+                                      } else {
+                                        // Add to graph first, then navigate
+                                        expandNode(relNode.id).then(() => {
+                                          setTimeout(() => handleRelationshipNodeClick(relNode.id), 100)
+                                        })
+                                      }
+                                    }}
+                                    className="flex-1 text-left p-2 rounded-lg border border-vulcan-700/50 hover:border-vulcan-600 hover:bg-vulcan-700/30 transition-colors group"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <div
+                                        className="w-2 h-2 rounded-full flex-shrink-0"
+                                        style={{ backgroundColor: NODE_COLORS[relNode.type] || '#64748b' }}
+                                      />
+                                      <span className="text-sm text-vulcan-200 group-hover:text-accent truncate">
+                                        {relNode.title}
+                                      </span>
+                                      {!isInGraph && (
+                                        <Plus className="w-3 h-3 text-vulcan-500 flex-shrink-0" />
+                                      )}
+                                    </div>
+                                    {relNode.citation && (
+                                      <p className="text-xs font-mono text-vulcan-500 ml-4 mt-0.5">{relNode.citation}</p>
+                                    )}
+                                  </button>
                                 </div>
-                                {relNode.citation && (
-                                  <p className="text-xs font-mono text-vulcan-500 ml-4 mt-0.5">{relNode.citation}</p>
-                                )}
-                              </button>
-                            ))}
+                              )
+                            })}
                           </div>
                         </div>
                       ))}

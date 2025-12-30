@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { FileText, Search, Filter, ExternalLink } from 'lucide-react'
+import { FileText, Search, Filter, ExternalLink, Upload, X, Plus } from 'lucide-react'
 import { NODE_COLOR_CLASSES } from '@/constants/legalNodeConfig'
 import { PageHeader } from '@/components/PageHeader'
 import { API_BASE_URL } from '@/lib/api'
 import { DocumentListSkeleton } from '@/components/Skeleton'
+import { DocumentUpload } from '@/components/DocumentUpload'
 
 interface LegalDocument {
   id: string
@@ -49,6 +50,7 @@ export default function DocumentsPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('')
+  const [showUpload, setShowUpload] = useState(false)
 
   useEffect(() => {
     fetchDocuments()
@@ -105,8 +107,8 @@ export default function DocumentsPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="bg-vulcan-800/50 backdrop-blur-sm rounded-xl border border-vulcan-700/50 overflow-hidden">
           {/* Search and Filter */}
-          <div className="p-4 border-b border-vulcan-700/50 flex gap-4">
-            <div className="flex-1 relative">
+          <div className="p-4 border-b border-vulcan-700/50 flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px] relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-vulcan-500" />
               <input
                 type="text"
@@ -116,20 +118,29 @@ export default function DocumentsPage() {
                 className="w-full pl-11 pr-4 py-2.5 bg-vulcan-900 border border-vulcan-600 rounded-lg text-white placeholder-vulcan-500 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-vulcan-500" />
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="border border-vulcan-600 rounded-lg px-3 py-2.5 text-sm text-vulcan-200 bg-vulcan-900 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-vulcan-500" />
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className="border border-vulcan-600 rounded-lg px-3 py-2.5 text-sm text-vulcan-200 bg-vulcan-900 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+                >
+                  <option value="">All Types</option>
+                  <option value="Statute">Statutes</option>
+                  <option value="Regulation">Regulations</option>
+                  <option value="CaseLaw">Case Law</option>
+                  <option value="ExecutiveOrder">Executive Orders</option>
+                  <option value="Agency">Agencies</option>
+                </select>
+              </div>
+              <button
+                onClick={() => setShowUpload(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent-hover text-white rounded-lg font-medium text-sm transition-colors"
               >
-                <option value="">All Types</option>
-                <option value="Statute">Statutes</option>
-                <option value="Regulation">Regulations</option>
-                <option value="CaseLaw">Case Law</option>
-                <option value="ExecutiveOrder">Executive Orders</option>
-                <option value="Agency">Agencies</option>
-              </select>
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Upload Document</span>
+              </button>
             </div>
           </div>
 
@@ -192,6 +203,43 @@ export default function DocumentsPage() {
           </div>
         )}
       </div>
+
+      {/* Upload Modal */}
+      {showUpload && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowUpload(false)}
+          />
+          <div className="relative w-full max-w-xl bg-vulcan-800 rounded-2xl border border-vulcan-700 shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-vulcan-700">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
+                  <Upload className="w-5 h-5 text-accent" />
+                </div>
+                <div>
+                  <h2 className="font-semibold text-white">Upload Document</h2>
+                  <p className="text-xs text-vulcan-400">Add a legal document to the knowledge base</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowUpload(false)}
+                className="p-2 hover:bg-vulcan-700 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-vulcan-400" />
+              </button>
+            </div>
+            <div className="p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+              <DocumentUpload
+                onUploadComplete={() => {
+                  fetchDocuments()
+                }}
+                onClose={() => setShowUpload(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
