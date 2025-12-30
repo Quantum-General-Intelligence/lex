@@ -1,8 +1,11 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { ZoomIn, ZoomOut, Maximize2, RefreshCw, X, ArrowRight, ArrowLeft, FileText, Scale, Building2, Gavel, ScrollText, Loader2, ChevronRight, Link2 } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, RefreshCw, X, ArrowRight, ArrowLeft, FileText, Loader2, ChevronRight, Link2 } from 'lucide-react'
 import dynamic from 'next/dynamic'
+import { NODE_COLORS, NODE_ICONS, RELATIONSHIP_LABELS } from '@/constants/legalNodeConfig'
+import { DEMO_GRAPH_DATA, DEMO_NODE_DETAILS } from '@/constants/demoData'
+import { API_BASE_URL } from '@/lib/api'
 
 // Dynamically import force graph to avoid SSR issues
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false })
@@ -53,165 +56,8 @@ interface NodeDetails {
   }[]
 }
 
-// Demo data for visualization
-const DEMO_DATA: GraphData = {
-  nodes: [
-    { id: '1', title: 'Administrative Procedure Act', citation: '5 U.S.C. § 551-559', type: 'Statute', jurisdiction: 'federal' },
-    { id: '2', title: 'FOIA', citation: '5 U.S.C. § 552', type: 'Statute', jurisdiction: 'federal' },
-    { id: '3', title: 'Privacy Act', citation: '5 U.S.C. § 552a', type: 'Statute', jurisdiction: 'federal' },
-    { id: '4', title: 'OMB Circular A-130', citation: 'OMB A-130', type: 'Regulation', jurisdiction: 'federal' },
-    { id: '5', title: 'NIST SP 800-53', citation: 'NIST 800-53', type: 'Guidance', jurisdiction: 'federal' },
-    { id: '6', title: 'FERPA', citation: '20 U.S.C. § 1232g', type: 'Statute', jurisdiction: 'federal' },
-    { id: '7', title: 'Dept. of Education', type: 'Agency', jurisdiction: 'federal' },
-    { id: '8', title: '34 CFR Part 99', citation: '34 CFR 99', type: 'Regulation', jurisdiction: 'federal' },
-    { id: '9', title: 'Student Privacy Rule', type: 'Regulation', jurisdiction: 'federal' },
-    { id: '10', title: 'HIPAA', citation: '42 U.S.C. § 1320d', type: 'Statute', jurisdiction: 'federal' },
-  ],
-  links: [
-    { source: '1', target: '4', type: 'AUTHORIZES' },
-    { source: '2', target: '4', type: 'AUTHORIZES' },
-    { source: '3', target: '4', type: 'AUTHORIZES' },
-    { source: '4', target: '5', type: 'IMPLEMENTS' },
-    { source: '6', target: '8', type: 'AUTHORIZES' },
-    { source: '7', target: '8', type: 'REGULATES' },
-    { source: '8', target: '9', type: 'IMPLEMENTS' },
-    { source: '6', target: '9', type: 'AUTHORIZES' },
-    { source: '3', target: '10', type: 'CITES' },
-  ],
-}
-
-// Demo node details
-const DEMO_NODE_DETAILS: Record<string, Omit<NodeDetails, 'relationships'>> = {
-  '1': {
-    id: '1',
-    type: 'Statute',
-    title: 'Administrative Procedure Act',
-    citation: '5 U.S.C. § 551-559',
-    jurisdiction: 'federal',
-    year: 1946,
-    summary: 'The APA governs the process by which federal agencies develop and issue regulations. It includes requirements for publishing notices of proposed and final rulemaking in the Federal Register, and provides opportunities for the public to comment on notices of proposed rulemaking.',
-    text: 'For the purpose of this subchapter—(1) "agency" means each authority of the Government of the United States, whether or not it is within or subject to review by another agency...',
-  },
-  '2': {
-    id: '2',
-    type: 'Statute',
-    title: 'Freedom of Information Act',
-    citation: '5 U.S.C. § 552',
-    jurisdiction: 'federal',
-    year: 1967,
-    summary: 'FOIA provides the public the right to request access to records from any federal agency. Federal agencies are required to disclose any information requested under FOIA unless it falls under one of nine exemptions.',
-    text: 'Each agency shall make available to the public information as follows: (1) Each agency shall separately state and currently publish in the Federal Register for the guidance of the public...',
-  },
-  '3': {
-    id: '3',
-    type: 'Statute',
-    title: 'Privacy Act of 1974',
-    citation: '5 U.S.C. § 552a',
-    jurisdiction: 'federal',
-    year: 1974,
-    summary: 'The Privacy Act establishes a code of fair information practices that governs the collection, maintenance, use, and dissemination of information about individuals maintained in systems of records by federal agencies.',
-    text: 'Each agency that maintains a system of records shall maintain in its records only such information about an individual as is relevant and necessary to accomplish a purpose of the agency...',
-  },
-  '4': {
-    id: '4',
-    type: 'Regulation',
-    title: 'OMB Circular A-130',
-    citation: 'OMB A-130',
-    jurisdiction: 'federal',
-    agency: 'Office of Management and Budget',
-    year: 2016,
-    summary: 'Establishes general policy for the planning, budgeting, governance, acquisition, and management of federal information, personnel, equipment, funds, IT resources and supporting infrastructure.',
-    text: 'This Circular establishes policy for the management of Federal information resources. OMB includes procedural and analytic guidelines for implementing specific aspects of these policies as appendices.',
-  },
-  '5': {
-    id: '5',
-    type: 'Guidance',
-    title: 'NIST Special Publication 800-53',
-    citation: 'NIST 800-53',
-    jurisdiction: 'federal',
-    agency: 'National Institute of Standards and Technology',
-    year: 2020,
-    summary: 'Provides a catalog of security and privacy controls for federal information systems and organizations to protect organizational operations, assets, individuals, and the Nation from a diverse set of threats.',
-  },
-  '6': {
-    id: '6',
-    type: 'Statute',
-    title: 'Family Educational Rights and Privacy Act',
-    citation: '20 U.S.C. § 1232g',
-    jurisdiction: 'federal',
-    year: 1974,
-    summary: 'FERPA protects the privacy of student education records. It applies to all schools that receive funds under an applicable program of the U.S. Department of Education.',
-    text: 'No funds shall be made available under any applicable program to any educational agency or institution which has a policy or practice of permitting the release of education records...',
-  },
-  '7': {
-    id: '7',
-    type: 'Agency',
-    title: 'U.S. Department of Education',
-    jurisdiction: 'federal',
-    abbreviation: 'ED',
-    year: 1979,
-    summary: 'The Department of Education is the agency of the federal government that establishes policy for, administers and coordinates most federal assistance to education.',
-  },
-  '8': {
-    id: '8',
-    type: 'Regulation',
-    title: 'FERPA Regulations',
-    citation: '34 CFR Part 99',
-    jurisdiction: 'federal',
-    agency: 'Department of Education',
-    year: 1988,
-    summary: 'Implements FERPA requirements. Defines education records, establishes procedures for access and amendment, and specifies conditions for disclosure of personally identifiable information.',
-  },
-  '9': {
-    id: '9',
-    type: 'Regulation',
-    title: 'Student Privacy Protection Rule',
-    jurisdiction: 'federal',
-    agency: 'Department of Education',
-    year: 2011,
-    summary: 'Strengthens FERPA protections by limiting the circumstances under which student education records can be disclosed without consent.',
-  },
-  '10': {
-    id: '10',
-    type: 'Statute',
-    title: 'Health Insurance Portability and Accountability Act',
-    citation: '42 U.S.C. § 1320d',
-    jurisdiction: 'federal',
-    year: 1996,
-    summary: 'HIPAA establishes national standards to protect sensitive patient health information from being disclosed without patient consent or knowledge.',
-    text: 'The Secretary shall adopt standards for transactions, and data elements for such transactions, to enable health information to be exchanged electronically...',
-  },
-}
-
-const NODE_COLORS: Record<string, string> = {
-  Statute: '#3b82f6',      // Blue
-  Regulation: '#8b5cf6',   // Purple
-  CaseLaw: '#10b981',      // Emerald
-  ExecutiveOrder: '#ef4444', // Red
-  Agency: '#f59e0b',       // Amber
-  Guidance: '#06b6d4',     // Cyan
-}
-
-const NODE_ICONS: Record<string, any> = {
-  Statute: Scale,
-  Regulation: ScrollText,
-  CaseLaw: Gavel,
-  ExecutiveOrder: FileText,
-  Agency: Building2,
-}
-
-const RELATIONSHIP_LABELS: Record<string, string> = {
-  AUTHORIZES: 'Authorizes',
-  IMPLEMENTS: 'Implements',
-  CITES: 'Cites',
-  INTERPRETS: 'Interprets',
-  OVERRULES: 'Overrules',
-  AMENDS: 'Amends',
-  REGULATES: 'Regulates',
-  ENFORCES: 'Enforces',
-  ESTABLISHES: 'Establishes',
-  CONSTRAINS: 'Constrains',
-}
+// Use shared demo data
+const DEMO_DATA: GraphData = DEMO_GRAPH_DATA
 
 interface AuthorityChainNode {
   id: string
@@ -233,7 +79,7 @@ export function GraphViewer() {
   const fetchGraphData = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/graph/explore?limit=50`)
+      const res = await fetch(`${API_BASE_URL}/api/graph/explore?limit=50`)
       if (res.ok) {
         const data = await res.json()
         if (data.nodes?.length > 0) {
@@ -243,9 +89,8 @@ export function GraphViewer() {
           })
         }
       }
-    } catch (err) {
-      // Use demo data on error
-      console.log('Using demo graph data')
+    } catch {
+      // Use demo data on error (already set as default)
     } finally {
       setLoading(false)
     }
@@ -254,14 +99,15 @@ export function GraphViewer() {
   const fetchNodeDetails = async (nodeId: string) => {
     setLoadingDetails(true)
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/graph/nodes/${nodeId}/details`)
+      const res = await fetch(`${API_BASE_URL}/api/graph/nodes/${nodeId}/details`)
       if (res.ok) {
         const data = await res.json()
         setNodeDetails(data)
+        setLoadingDetails(false)
         return
       }
-    } catch (err) {
-      console.log('Using demo node details')
+    } catch {
+      // Use demo data on error
     }
 
     // Fallback to demo data
@@ -324,7 +170,7 @@ export function GraphViewer() {
 
     setLoadingChain(true)
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/graph/nodes/${nodeId}/authority-chain`)
+      const res = await fetch(`${API_BASE_URL}/api/graph/nodes/${nodeId}/authority-chain`)
       if (res.ok) {
         const data = await res.json()
         setAuthorityChain(data.authority_chain || [])
