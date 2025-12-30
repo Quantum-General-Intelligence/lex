@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { ChevronDown, Menu, X } from 'lucide-react'
+import { ChevronDown, Menu, X, User, LogOut } from 'lucide-react'
+import { useSession, signOut } from 'next-auth/react'
 
 const navigation = [
   { name: 'Platform', href: '/' },
@@ -25,8 +26,10 @@ const navigation = [
 
 export function Navigation() {
   const pathname = usePathname()
+  const { data: session, status } = useSession()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [modulesOpen, setModulesOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-vulcan-900/80 backdrop-blur-xl border-b border-vulcan-700/50">
@@ -96,14 +99,61 @@ export function Navigation() {
             ))}
           </div>
 
-          {/* CTA Button */}
-          <div className="hidden md:block">
-            <Link
-              href="/query"
-              className="px-5 py-2 bg-transparent border border-vulcan-400 text-white rounded-full text-sm font-medium hover:bg-vulcan-800 hover:border-vulcan-300 transition-all"
-            >
-              Start querying
-            </Link>
+          {/* Auth Section */}
+          <div className="hidden md:flex items-center gap-4">
+            {status === 'loading' ? (
+              <div className="w-8 h-8 rounded-full bg-vulcan-700 animate-pulse" />
+            ) : session ? (
+              <div
+                className="relative"
+                onMouseEnter={() => setUserMenuOpen(true)}
+                onMouseLeave={() => setUserMenuOpen(false)}
+              >
+                <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-vulcan-800 border border-vulcan-600 hover:border-vulcan-500 transition-colors">
+                  <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center">
+                    <User className="w-3.5 h-3.5 text-accent" />
+                  </div>
+                  <span className="text-sm text-white">{session.user?.name?.split(' ')[0]}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-vulcan-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {userMenuOpen && (
+                  <div className="absolute top-full right-0 pt-2">
+                    <div className="bg-vulcan-800 border border-vulcan-600 rounded-xl shadow-xl p-2 min-w-[180px]">
+                      <div className="px-3 py-2 border-b border-vulcan-700">
+                        <div className="text-sm font-medium text-white">{session.user?.name}</div>
+                        <div className="text-xs text-vulcan-400">{session.user?.email}</div>
+                        {(session.user as any)?.role && (
+                          <span className="inline-block mt-1 text-xs px-2 py-0.5 bg-accent/20 text-accent rounded-full capitalize">
+                            {(session.user as any).role}
+                          </span>
+                        )}
+                      </div>
+                      <Link
+                        href="/settings"
+                        className="block px-3 py-2 text-sm text-vulcan-200 hover:bg-vulcan-700 rounded-lg mt-1"
+                      >
+                        Settings
+                      </Link>
+                      <button
+                        onClick={() => signOut({ callbackUrl: '/' })}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-vulcan-700 rounded-lg"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="px-5 py-2 bg-accent hover:bg-accent-hover text-white rounded-full text-sm font-medium transition-colors"
+              >
+                Sign in
+              </Link>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -155,14 +205,34 @@ export function Navigation() {
                 )}
               </div>
             ))}
-            <div className="pt-4">
-              <Link
-                href="/query"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block w-full text-center px-5 py-2.5 bg-accent text-white rounded-full text-sm font-medium"
-              >
-                Start querying
-              </Link>
+            {/* Mobile Auth */}
+            <div className="pt-4 border-t border-vulcan-700 mt-4">
+              {session ? (
+                <div className="space-y-3">
+                  <div className="px-3 py-2">
+                    <div className="text-sm font-medium text-white">{session.user?.name}</div>
+                    <div className="text-xs text-vulcan-400">{session.user?.email}</div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      signOut({ callbackUrl: '/' })
+                      setMobileMenuOpen(false)
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-5 py-2.5 bg-vulcan-700 text-red-400 rounded-full text-sm font-medium"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign out
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full text-center px-5 py-2.5 bg-accent text-white rounded-full text-sm font-medium"
+                >
+                  Sign in
+                </Link>
+              )}
             </div>
           </div>
         </div>
