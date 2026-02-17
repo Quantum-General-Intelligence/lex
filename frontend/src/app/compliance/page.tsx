@@ -15,7 +15,7 @@ export default function CompliancePage() {
       />
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="bg-vulcan-800/50 backdrop-blur-sm rounded-xl border border-vulcan-700/50 p-6">
+        <div className="bg-vulcan-800 rounded-xl border border-vulcan-700 p-6">
           <ComplianceChecker />
         </div>
       </div>

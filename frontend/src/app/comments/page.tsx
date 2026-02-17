@@ -9,7 +9,7 @@ export default function CommentsPage() {
   return (
     <div className="min-h-screen bg-vulcan-900">
       {/* Header */}
-      <header className="bg-vulcan-900/80 backdrop-blur-xl border-b border-vulcan-700/50">
+      <header className="bg-vulcan-900 border-b border-vulcan-700">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-vulcan-800 border border-vulcan-600 rounded-xl flex items-center justify-center">
@@ -27,7 +27,7 @@ export default function CommentsPage() {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-vulcan-800/50 backdrop-blur-sm rounded-xl border border-vulcan-700/50 p-6">
+          <div className="bg-vulcan-800 rounded-xl border border-vulcan-700 p-6">
             <h2 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
               <Upload className="w-4 h-4 text-vulcan-400" />
               Upload Comments
@@ -63,7 +63,7 @@ export default function CommentsPage() {
             </div>
           </div>
 
-          <div className="bg-vulcan-800/50 backdrop-blur-sm rounded-xl border border-vulcan-700/50 p-6">
+          <div className="bg-vulcan-800 rounded-xl border border-vulcan-700 p-6">
             <h2 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-vulcan-400" />
               Analysis Results

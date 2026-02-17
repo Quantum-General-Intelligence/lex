@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks
-from sqlalchemy.ext.asyncio import AsyncSession
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy import select
-from typing import Optional
-import uuid
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.models.legal import Document, DocumentType, DocumentChunk, IngestionJob, IngestionStatus
+from app.models.legal import Document, DocumentType, IngestionJob
 from app.schemas.legal import DocumentCreate, DocumentResponse
 from app.services.ingestion import get_ingestion_service
 
@@ -39,8 +38,8 @@ async def create_document(
 async def list_documents(
     skip: int = 0,
     limit: int = 50,
-    document_type: Optional[DocumentType] = None,
-    jurisdiction: Optional[str] = None,
+    document_type: DocumentType | None = None,
+    jurisdiction: str | None = None,
     db: AsyncSession = Depends(get_db),
 ):
     """List documents with optional filters."""
@@ -92,8 +91,8 @@ async def delete_document(
 @router.post("/ingest")
 async def ingest_document(
     file: UploadFile = File(...),
-    title: Optional[str] = Form(None),
-    document_type: Optional[str] = Form(None),
+    title: str | None = Form(None),
+    document_type: str | None = Form(None),
     jurisdiction: str = Form("federal"),
     db: AsyncSession = Depends(get_db),
 ):

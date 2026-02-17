@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db, neo4j_conn, get_redis, get_chroma_client
 from app.core.config import get_settings
+from app.core.database import get_chroma_client, get_db, get_redis, neo4j_conn
+from app.core.feature_flags import get_all_flags
 
 router = APIRouter()
 settings = get_settings()
@@ -70,3 +71,15 @@ async def detailed_health_check(db: AsyncSession = Depends(get_db)):
     health_status["overall"] = "healthy" if all_healthy else "degraded"
 
     return health_status
+
+
+@router.get("/health/flags")
+async def get_feature_flags():
+    """Get current state of all feature flags.
+
+    Useful for debugging and verifying configuration.
+    """
+    return {
+        "flags": get_all_flags(),
+        "environment": settings.environment,
+    }

@@ -1,13 +1,16 @@
-from fastapi import APIRouter, HTTPException
 import time
-from typing import Optional
 
+import structlog
+from fastapi import APIRouter, HTTPException
+
+from app.core.audit import AuditTrail
 from app.core.config import get_settings
-from app.core.database import neo4j_conn, get_chroma_client
+from app.core.database import get_chroma_client, neo4j_conn
 from app.core.demo_data import get_demo_store, is_demo_mode
-from app.schemas.rag import QueryRequest, QueryResponse, Citation
+from app.schemas.rag import Citation, QueryRequest, QueryResponse
 from app.services.rag import RAGService
 
+logger = structlog.get_logger()
 router = APIRouter()
 settings = get_settings()
 rag_service = RAGService()
@@ -75,6 +78,23 @@ async def query_legal_corpus(request: QueryRequest):
 
         elapsed = (time.time() - start_time) * 1000
 
+        # Record audit trail
+        AuditTrail.record(
+            query=request.query,
+            answer=answer,
+            confidence_score=confidence,
+            citations=citations,
+            chain_of_thought=chain_of_thought,
+            ambiguity_flags=ambiguity_flags,
+            processing_time_ms=round(elapsed, 2),
+            filters={
+                "jurisdiction": request.jurisdiction_filter,
+                "document_type": request.document_type_filter,
+            },
+            graph_context=graph_context,
+            demo_mode=True,
+        )
+
         return QueryResponse(
             query=request.query,
             answer=answer,
@@ -100,7 +120,7 @@ async def query_legal_corpus(request: QueryRequest):
             n_results=request.top_k,
             where=_build_where_filter(request.jurisdiction_filter, request.document_type_filter),
         )
-    except Exception as e:
+    except Exception:
         # If ChromaDB is empty or unavailable, return a helpful message
         results = {"ids": [[]], "documents": [[]], "metadatas": [[]], "distances": [[]]}
 
@@ -147,6 +167,23 @@ async def query_legal_corpus(request: QueryRequest):
 
     elapsed = (time.time() - start_time) * 1000
 
+    # Record audit trail
+    AuditTrail.record(
+        query=request.query,
+        answer=answer,
+        confidence_score=confidence,
+        citations=citations,
+        chain_of_thought=chain_of_thought,
+        ambiguity_flags=ambiguity_flags,
+        processing_time_ms=round(elapsed, 2),
+        filters={
+            "jurisdiction": request.jurisdiction_filter,
+            "document_type": request.document_type_filter,
+        },
+        graph_context=graph_context,
+        demo_mode=False,
+    )
+
     return QueryResponse(
         query=request.query,
         answer=answer,
@@ -160,8 +197,8 @@ async def query_legal_corpus(request: QueryRequest):
 
 
 def _build_where_filter(
-    jurisdiction: Optional[str], document_type: Optional[str]
-) -> Optional[dict]:
+    jurisdiction: str | None, document_type: str | None
+) -> dict | None:
     """Build ChromaDB where filter from query parameters."""
     conditions = []
 
@@ -212,7 +249,7 @@ async def _generate_answer(
     context_chunks: list[str],
     graph_context: list[dict],
     explain: bool,
-) -> tuple[str, float, Optional[str], list[str]]:
+) -> tuple[str, float, str | None, list[str]]:
     """
     Generate an answer using the LLM (OpenAI or Ollama).
     """
@@ -273,7 +310,7 @@ def _generate_demo_answer(
     citations: list[Citation],
     graph_context: list[dict],
     explain: bool,
-) -> tuple[str, float, Optional[str], list[str]]:
+) -> tuple[str, float, str | None, list[str]]:
     """Generate a demo answer based on matched citations."""
     if not citations:
         return (
@@ -288,7 +325,7 @@ def _generate_demo_answer(
     top_citation = citations[0]
     related_docs = [c.document_title for c in citations[1:4]]
 
-    answer = f"Based on the legal corpus, here's what I found regarding your query:\n\n"
+    answer = "Based on the legal corpus, here's what I found regarding your query:\n\n"
     answer += f"**Primary Source: {top_citation.document_title}**"
     if top_citation.citation:
         answer += f" ({top_citation.citation})"
@@ -342,3 +379,28 @@ async def suggest_queries(partial: str, limit: int = 5):
         f"{partial} reporting requirements",
     ]
     return {"suggestions": suggestions[:limit]}
+
+
+@router.get("/audit")
+async def get_audit_records(limit: int = 50):
+    """Get recent AI query audit records.
+
+    Returns audit trail of queries for compliance and debugging.
+    """
+    records = AuditTrail.get_recent(limit=limit)
+    return {
+        "records": [r.model_dump() for r in records],
+        "stats": AuditTrail.get_stats(),
+    }
+
+
+@router.get("/audit/{audit_id}")
+async def get_audit_record(audit_id: str):
+    """Get a specific audit record by ID.
+
+    Useful for investigating specific queries.
+    """
+    record = AuditTrail.get_by_id(audit_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Audit record not found")
+    return record.model_dump()

@@ -1,14 +1,12 @@
 """Document ingestion service for processing legal documents."""
 
+import io
 import logging
 import re
-import io
-from typing import Optional
-from datetime import datetime
 
 from app.core.config import get_settings
-from app.services.rag import RAGService
 from app.core.database import neo4j_conn
+from app.services.rag import RAGService
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -286,10 +284,10 @@ class IngestionService:
         title: str,
         document_type: str,
         jurisdiction: str,
-        agency: Optional[str],
+        agency: str | None,
         summary: str,
         text: str,
-        citation: Optional[str] = None,
+        citation: str | None = None,
     ) -> bool:
         """Create a node in Neo4j for the document."""
         try:
@@ -347,8 +345,8 @@ class IngestionService:
         title: str,
         document_type: str,
         jurisdiction: str = "federal",
-        agency: Optional[str] = None,
-        citation: Optional[str] = None,
+        agency: str | None = None,
+        citation: str | None = None,
         create_graph_node: bool = True,
     ) -> dict:
         """Process a document: chunk, extract entities, and index."""
@@ -420,9 +418,9 @@ class IngestionService:
         content: bytes,
         filename: str,
         content_type: str,
-        document_type: Optional[str] = None,
+        document_type: str | None = None,
         jurisdiction: str = "federal",
-        title: Optional[str] = None,
+        title: str | None = None,
     ) -> dict:
         """Full ingestion pipeline for a file upload."""
         import uuid

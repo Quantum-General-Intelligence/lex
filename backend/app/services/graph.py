@@ -1,6 +1,6 @@
 """Graph service for legal cartography operations."""
 
-from typing import Optional
+
 from app.core.database import neo4j_conn
 from app.schemas.legal import LegalNodeType, RelationshipType
 
@@ -12,13 +12,13 @@ class GraphService:
     async def create_node(
         node_type: LegalNodeType,
         title: str,
-        citation: Optional[str] = None,
+        citation: str | None = None,
         jurisdiction: str = "federal",
-        agency: Optional[str] = None,
-        text: Optional[str] = None,
-        summary: Optional[str] = None,
-        source_url: Optional[str] = None,
-        metadata: Optional[dict] = None,
+        agency: str | None = None,
+        text: str | None = None,
+        summary: str | None = None,
+        source_url: str | None = None,
+        metadata: dict | None = None,
     ) -> dict:
         """Create a new node in the knowledge graph."""
         import uuid
@@ -59,7 +59,7 @@ class GraphService:
         source_id: str,
         target_id: str,
         relationship_type: RelationshipType,
-        properties: Optional[dict] = None,
+        properties: dict | None = None,
     ) -> bool:
         """Create a relationship between two nodes."""
         query = f"""

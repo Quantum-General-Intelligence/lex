@@ -1,17 +1,17 @@
 from app.schemas.legal import (
+    AuthorityChainResponse,
     DocumentCreate,
     DocumentResponse,
     DocumentType,
+    GraphQueryResponse,
     LegalNodeCreate,
     LegalNodeResponse,
     LegalRelationshipCreate,
-    GraphQueryResponse,
-    AuthorityChainResponse,
 )
 from app.schemas.rag import (
+    Citation,
     QueryRequest,
     QueryResponse,
-    Citation,
     SearchResult,
 )
 

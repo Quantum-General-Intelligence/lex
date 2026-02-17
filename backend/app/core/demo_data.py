@@ -3,7 +3,6 @@
 import json
 import logging
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +13,7 @@ _DATA_PATH = Path(__file__).parent.parent / "data" / "demo_data.json"
 def _load_demo_data() -> dict:
     """Load demo data from JSON file."""
     try:
-        with open(_DATA_PATH, "r") as f:
+        with open(_DATA_PATH) as f:
             return json.load(f)
     except FileNotFoundError:
         logger.error(f"Demo data file not found: {_DATA_PATH}")
@@ -68,9 +67,9 @@ class DemoDataStore:
 
     def get_nodes(
         self,
-        node_type: Optional[str] = None,
-        jurisdiction: Optional[str] = None,
-        search: Optional[str] = None,
+        node_type: str | None = None,
+        jurisdiction: str | None = None,
+        search: str | None = None,
         limit: int = 50,
         skip: int = 0,
     ) -> list[dict]:
@@ -94,7 +93,7 @@ class DemoDataStore:
 
         return results[skip:skip + limit]
 
-    def get_node(self, node_id: str) -> Optional[dict]:
+    def get_node(self, node_id: str) -> dict | None:
         """Get a single node by ID."""
         return self.nodes.get(node_id)
 
@@ -158,7 +157,7 @@ class DemoDataStore:
 
     def explore_graph(
         self,
-        center_node_id: Optional[str] = None,
+        center_node_id: str | None = None,
         limit: int = 100,
     ) -> dict:
         """Get nodes and relationships for visualization."""
@@ -226,8 +225,8 @@ class DemoDataStore:
         self,
         query: str,
         top_k: int = 5,
-        jurisdiction: Optional[str] = None,
-        document_type: Optional[str] = None,
+        jurisdiction: str | None = None,
+        document_type: str | None = None,
     ) -> list[dict]:
         """Simple keyword search over chunks (simulates vector search)."""
         query_terms = query.lower().split()
@@ -271,7 +270,7 @@ class DemoDataStore:
 
 
 # Global demo data store instance
-_demo_store: Optional[DemoDataStore] = None
+_demo_store: DemoDataStore | None = None
 
 
 def get_demo_store() -> DemoDataStore:

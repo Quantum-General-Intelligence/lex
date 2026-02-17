@@ -1,7 +1,7 @@
-from pydantic import BaseModel, Field
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class DocumentType(str, Enum):
@@ -36,12 +36,12 @@ class RelationshipType(str, Enum):
 class DocumentCreate(BaseModel):
     title: str = Field(..., max_length=500)
     document_type: DocumentType
-    citation: Optional[str] = Field(None, max_length=200)
-    jurisdiction: Optional[str] = Field(None, max_length=100)
-    agency: Optional[str] = Field(None, max_length=200)
-    effective_date: Optional[datetime] = None
-    source_url: Optional[str] = None
-    raw_text: Optional[str] = None
+    citation: str | None = Field(None, max_length=200)
+    jurisdiction: str | None = Field(None, max_length=100)
+    agency: str | None = Field(None, max_length=200)
+    effective_date: datetime | None = None
+    source_url: str | None = None
+    raw_text: str | None = None
     metadata: dict = Field(default_factory=dict)
 
 
@@ -49,11 +49,11 @@ class DocumentResponse(BaseModel):
     id: str
     title: str
     document_type: DocumentType
-    citation: Optional[str]
-    jurisdiction: Optional[str]
-    agency: Optional[str]
-    effective_date: Optional[datetime]
-    source_url: Optional[str]
+    citation: str | None
+    jurisdiction: str | None
+    agency: str | None
+    effective_date: datetime | None
+    source_url: str | None
     metadata: dict = Field(default_factory=dict, validation_alias="extra_data")
     created_at: datetime
     updated_at: datetime
@@ -69,13 +69,13 @@ class LegalNodeCreate(BaseModel):
 
     node_type: LegalNodeType
     title: str = Field(..., max_length=500)
-    citation: Optional[str] = Field(None, max_length=200)
+    citation: str | None = Field(None, max_length=200)
     jurisdiction: str = Field(default="federal", max_length=100)
-    agency: Optional[str] = None
-    effective_date: Optional[datetime] = None
-    text: Optional[str] = None
-    summary: Optional[str] = None
-    source_url: Optional[str] = None
+    agency: str | None = None
+    effective_date: datetime | None = None
+    text: str | None = None
+    summary: str | None = None
+    source_url: str | None = None
     metadata: dict = Field(default_factory=dict)
 
 
@@ -85,12 +85,12 @@ class LegalNodeResponse(BaseModel):
     id: str
     node_type: LegalNodeType
     title: str
-    citation: Optional[str]
+    citation: str | None
     jurisdiction: str
-    agency: Optional[str]
-    effective_date: Optional[datetime]
-    summary: Optional[str]
-    source_url: Optional[str]
+    agency: str | None
+    effective_date: datetime | None
+    summary: str | None
+    source_url: str | None
     metadata: dict
     relationship_count: int = 0
 
@@ -98,10 +98,18 @@ class LegalNodeResponse(BaseModel):
 class LegalRelationshipCreate(BaseModel):
     """Create a relationship between legal nodes."""
 
-    source_id: str
-    target_id: str
+    source_id: str = Field(..., min_length=1, max_length=100)
+    target_id: str = Field(..., min_length=1, max_length=100)
     relationship_type: RelationshipType
     properties: dict = Field(default_factory=dict)
+
+
+class GraphExploreRequest(BaseModel):
+    """Request parameters for graph exploration."""
+
+    center_node_id: str | None = Field(None, min_length=1, max_length=100)
+    depth: int = Field(default=2, ge=1, le=4)
+    limit: int = Field(default=100, ge=1, le=500)
 
 
 class LegalRelationshipResponse(BaseModel):

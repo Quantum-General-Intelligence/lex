@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { FileText, Search, Filter, ExternalLink, Upload, X, Plus } from 'lucide-react'
 import { NODE_COLOR_CLASSES } from '@/constants/legalNodeConfig'
 import { PageHeader } from '@/components/PageHeader'
-import { ConstellationBackground } from '@/components/ConstellationBackground'
 import { API_BASE_URL } from '@/lib/api'
 import { DocumentListSkeleton } from '@/components/Skeleton'
 import { DocumentUpload } from '@/components/DocumentUpload'
@@ -71,14 +70,12 @@ export default function DocumentsPage() {
         if (data.length > 0) {
           setDocuments(data)
         } else {
-          // Fall back to demo data if no results
           setDocuments(filterDemoDocuments(searchTerm, typeFilter))
         }
       } else {
         setDocuments(filterDemoDocuments(searchTerm, typeFilter))
       }
     } catch {
-      // Use demo data on error
       setDocuments(filterDemoDocuments(searchTerm, typeFilter))
     } finally {
       setLoading(false)
@@ -97,18 +94,7 @@ export default function DocumentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-vulcan-900 relative overflow-hidden">
-      {/* Emerald-themed constellation */}
-      <ConstellationBackground
-        nodeCount={15}
-        connectionDensity={0.2}
-        colorScheme="blue"
-        interactive={false}
-        speed={0.3}
-        showOrbs={true}
-        showGrid={true}
-        opacity={0.3}
-      />
+    <div className="min-h-screen bg-vulcan-900">
       <PageHeader
         icon={FileText}
         iconColor="text-emerald-400"
@@ -117,9 +103,9 @@ export default function DocumentsPage() {
       />
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="bg-vulcan-800/50 backdrop-blur-sm rounded-xl border border-vulcan-700/50 overflow-hidden">
+        <div className="bg-vulcan-800 rounded-xl border border-vulcan-700 overflow-hidden">
           {/* Search and Filter */}
-          <div className="p-4 border-b border-vulcan-700/50 flex flex-wrap gap-4">
+          <div className="p-4 border-b border-vulcan-700 flex flex-wrap gap-4">
             <div className="flex-1 min-w-[200px] relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-vulcan-500" />
               <input
@@ -127,7 +113,7 @@ export default function DocumentsPage() {
                 placeholder="Search documents..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-11 pr-4 py-2.5 bg-vulcan-900 border border-vulcan-600 rounded-lg text-white placeholder-vulcan-500 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
+                className="w-full pl-11 pr-4 py-2.5 bg-vulcan-900 border border-vulcan-600 rounded-lg text-vulcan-100 placeholder-vulcan-500 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
               />
             </div>
             <div className="flex items-center gap-3">
@@ -136,7 +122,7 @@ export default function DocumentsPage() {
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="border border-vulcan-600 rounded-lg px-3 py-2.5 text-sm text-vulcan-200 bg-vulcan-900 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+                  className="border border-vulcan-600 rounded-lg px-3 py-2.5 text-sm text-vulcan-200 bg-vulcan-900 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                 >
                   <option value="">All Types</option>
                   <option value="Statute">Statutes</option>
@@ -157,7 +143,7 @@ export default function DocumentsPage() {
           </div>
 
           {/* Document List */}
-          <div className="divide-y divide-vulcan-700/50">
+          <div className="divide-y divide-vulcan-700">
             {loading ? (
               <div className="p-4">
                 <DocumentListSkeleton count={8} />
@@ -170,11 +156,11 @@ export default function DocumentsPage() {
               </div>
             ) : (
               documents.map((doc) => (
-                <div key={doc.id} className="p-4 hover:bg-vulcan-700/30 transition-colors group">
+                <div key={doc.id} className="p-4 hover:bg-vulcan-700/50 transition-colors group">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-medium text-white truncate">{doc.title}</h3>
+                        <h3 className="font-medium text-vulcan-100 truncate">{doc.title}</h3>
                         <ExternalLink className="w-3.5 h-3.5 text-vulcan-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                       {doc.citation && (
@@ -189,14 +175,14 @@ export default function DocumentsPage() {
                             {doc.agency}
                           </span>
                         )}
-                        <span className="text-xs px-2 py-0.5 bg-vulcan-700/50 text-vulcan-400 rounded-full">
+                        <span className="text-xs px-2 py-0.5 bg-vulcan-700 text-vulcan-400 rounded-full">
                           {doc.jurisdiction}
                         </span>
                       </div>
                     </div>
                     <span
                       className={`px-2.5 py-1 text-xs font-medium rounded-full ml-4 flex-shrink-0 border ${
-                        NODE_COLOR_CLASSES[doc.type]?.bg || 'bg-vulcan-700/50'
+                        NODE_COLOR_CLASSES[doc.type]?.bg || 'bg-vulcan-700'
                       } ${NODE_COLOR_CLASSES[doc.type]?.border || ''} ${NODE_COLOR_CLASSES[doc.type]?.text || 'text-vulcan-400'}`}
                     >
                       {doc.type}
@@ -220,7 +206,7 @@ export default function DocumentsPage() {
       {showUpload && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60"
             onClick={() => setShowUpload(false)}
           />
           <div className="relative w-full max-w-xl bg-vulcan-800 rounded-2xl border border-vulcan-700 shadow-2xl overflow-hidden">
@@ -230,7 +216,7 @@ export default function DocumentsPage() {
                   <Upload className="w-5 h-5 text-accent" />
                 </div>
                 <div>
-                  <h2 className="font-semibold text-white">Upload Document</h2>
+                  <h2 className="font-semibold text-vulcan-50">Upload Document</h2>
                   <p className="text-xs text-vulcan-400">Add a legal document to the knowledge base</p>
                 </div>
               </div>

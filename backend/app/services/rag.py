@@ -1,7 +1,7 @@
 """RAG service for semantic search and question answering."""
 
 import logging
-from typing import Optional
+
 import httpx
 
 from app.core.config import get_settings
@@ -48,8 +48,8 @@ class RAGService:
         self,
         query: str,
         top_k: int = 5,
-        jurisdiction: Optional[str] = None,
-        document_type: Optional[str] = None,
+        jurisdiction: str | None = None,
+        document_type: str | None = None,
     ) -> list[dict]:
         """Perform semantic search over the legal corpus."""
         if not self.available:
@@ -128,7 +128,7 @@ class RAGService:
         self,
         query: str,
         context_chunks: list[str],
-        graph_context: Optional[list[dict]] = None,
+        graph_context: list[dict] | None = None,
     ) -> dict:
         """Generate an answer using the LLM."""
         # Build context
@@ -228,7 +228,7 @@ Answer:"""
                 else:
                     raise Exception(f"Ollama error: {response.status_code}")
 
-        except Exception as e:
+        except Exception:
             # Return a placeholder if LLM is unavailable
             return {
                 "answer": f"Based on the provided legal documents: {context[:500]}...\n\n[Note: Full LLM analysis unavailable. Please configure OpenAI API key or run Ollama.]",

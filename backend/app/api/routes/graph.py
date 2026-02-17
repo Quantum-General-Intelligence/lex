@@ -1,18 +1,20 @@
-from fastapi import APIRouter, HTTPException, Query
-from typing import Optional
 import time
+
+import structlog
+from fastapi import APIRouter, HTTPException, Query
 
 from app.core.database import neo4j_conn
 from app.core.demo_data import get_demo_store, is_demo_mode
+from app.core.feature_flags import FeatureFlag, is_enabled
 from app.schemas.legal import (
+    AuthorityChainResponse,
     LegalNodeCreate,
     LegalNodeResponse,
-    LegalRelationshipCreate,
-    GraphQueryResponse,
-    AuthorityChainResponse,
     LegalNodeType,
-    RelationshipType,
+    LegalRelationshipCreate,
 )
+
+logger = structlog.get_logger()
 
 router = APIRouter()
 
@@ -257,11 +259,11 @@ async def create_relationship(relationship: LegalRelationshipCreate):
 
 @router.get("/nodes", response_model=list[LegalNodeResponse])
 async def list_nodes(
-    node_type: Optional[LegalNodeType] = None,
-    jurisdiction: Optional[str] = None,
-    search: Optional[str] = None,
-    limit: int = Query(default=50, le=200),
-    skip: int = 0,
+    node_type: LegalNodeType | None = None,
+    jurisdiction: str | None = Query(None, max_length=100),
+    search: str | None = Query(None, max_length=200),
+    limit: int = Query(default=50, ge=1, le=200),
+    skip: int = Query(default=0, ge=0),
 ):
     """List nodes with optional filters."""
     # Use demo data if in demo mode
@@ -353,7 +355,10 @@ async def list_nodes(
 
 
 @router.get("/authority-chain/{node_id}", response_model=AuthorityChainResponse)
-async def get_authority_chain(node_id: str, max_depth: int = Query(default=5, le=10)):
+async def get_authority_chain(
+    node_id: str,
+    max_depth: int = Query(default=5, ge=1, le=10),
+):
     """
     Get the authority chain for a regulation.
 
@@ -511,9 +516,9 @@ async def get_authority_chain(node_id: str, max_depth: int = Query(default=5, le
 
 @router.get("/explore")
 async def explore_graph(
-    center_node_id: Optional[str] = None,
-    depth: int = Query(default=2, le=4),
-    limit: int = Query(default=100, le=500),
+    center_node_id: str | None = Query(None, max_length=100),
+    depth: int = Query(default=2, ge=1, le=4),
+    limit: int = Query(default=100, ge=1, le=500),
 ):
     """
     Explore the graph around a center node or get an overview.
@@ -522,11 +527,30 @@ async def explore_graph(
     """
     start_time = time.time()
 
+    # Log if audit logging is enabled (feature flag)
+    if is_enabled(FeatureFlag.AUDIT_LOGGING):
+        logger.info(
+            "graph_explore_started",
+            center_node_id=center_node_id,
+            depth=depth,
+            limit=limit,
+            demo_mode=is_demo_mode(),
+        )
+
     # Use demo data if in demo mode
     if is_demo_mode():
         demo_store = get_demo_store()
         result = demo_store.explore_graph(center_node_id=center_node_id, limit=limit)
         elapsed = (time.time() - start_time) * 1000
+
+        if is_enabled(FeatureFlag.AUDIT_LOGGING):
+            logger.info(
+                "graph_explore_completed",
+                node_count=len(result["nodes"]),
+                relationship_count=len(result["relationships"]),
+                elapsed_ms=round(elapsed, 2),
+            )
+
         return {
             "nodes": result["nodes"],
             "relationships": result["relationships"],
@@ -560,7 +584,7 @@ async def explore_graph(
 
     try:
         result = await neo4j_conn.execute_query(query, params)
-    except Exception as e:
+    except Exception:
         # Fallback with simpler query
         if center_node_id:
             query = """
@@ -630,6 +654,14 @@ async def explore_graph(
                     "target": target,
                     "type": rel_type or "RELATED",
                 })
+
+    if is_enabled(FeatureFlag.AUDIT_LOGGING):
+        logger.info(
+            "graph_explore_completed",
+            node_count=len(nodes),
+            relationship_count=len(relationships),
+            elapsed_ms=round(elapsed, 2),
+        )
 
     return {
         "nodes": nodes,

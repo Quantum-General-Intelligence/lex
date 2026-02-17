@@ -241,7 +241,7 @@ Users may request access to their records by contacting the agency.`)}
                         <p className="text-vulcan-200 text-sm mb-3">{issue.issue_description}</p>
                         <div className="bg-vulcan-900/50 rounded-lg p-3 mb-3 border border-vulcan-700/50">
                           <p className="text-xs text-vulcan-500 mb-1">Document excerpt:</p>
-                          <p className="text-sm text-vulcan-300 italic">"{issue.document_excerpt}"</p>
+                          <p className="text-sm text-vulcan-300 italic">&quot;{issue.document_excerpt}&quot;</p>
                         </div>
                         {issue.suggested_fix && (
                           <div className="flex items-start gap-2 text-sm">

@@ -1,6 +1,5 @@
+
 from pydantic import BaseModel, Field
-from typing import Optional
-from datetime import datetime
 
 
 class Citation(BaseModel):
@@ -8,10 +7,10 @@ class Citation(BaseModel):
 
     document_id: str
     document_title: str
-    citation: Optional[str]  # Legal citation format
+    citation: str | None  # Legal citation format
     chunk_text: str
     relevance_score: float
-    page_or_section: Optional[str] = None
+    page_or_section: str | None = None
 
 
 class SearchResult(BaseModel):
@@ -29,8 +28,8 @@ class QueryRequest(BaseModel):
 
     query: str = Field(..., min_length=3, max_length=2000)
     top_k: int = Field(default=5, ge=1, le=20)
-    jurisdiction_filter: Optional[str] = None
-    document_type_filter: Optional[str] = None
+    jurisdiction_filter: str | None = None
+    document_type_filter: str | None = None
     include_graph_context: bool = Field(default=True)
     explain: bool = Field(default=True)  # Include chain-of-thought
 
@@ -42,7 +41,7 @@ class QueryResponse(BaseModel):
     answer: str
     confidence_score: float = Field(ge=0.0, le=1.0)
     citations: list[Citation]
-    chain_of_thought: Optional[str] = None  # Explainability
+    chain_of_thought: str | None = None  # Explainability
     related_nodes: list[str] = Field(default_factory=list)  # Graph node IDs
     ambiguity_flags: list[str] = Field(default_factory=list)  # Areas needing human review
     processing_time_ms: float
@@ -52,7 +51,7 @@ class ComplianceCheckRequest(BaseModel):
     """Request for compliance checking against regulations."""
 
     document_text: str = Field(..., min_length=10)
-    target_regulations: Optional[list[str]] = None  # Specific regulation IDs
+    target_regulations: list[str] | None = None  # Specific regulation IDs
     jurisdiction: str = Field(default="federal")
     check_type: str = Field(default="full")  # "full", "quick", "specific"
 
@@ -65,7 +64,7 @@ class ComplianceIssue(BaseModel):
     regulation_citation: str
     issue_description: str
     document_excerpt: str
-    suggested_fix: Optional[str] = None
+    suggested_fix: str | None = None
     confidence: float
 
 

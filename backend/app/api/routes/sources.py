@@ -1,10 +1,10 @@
 """API routes for legal data source integrations."""
 
-from fastapi import APIRouter, Query, HTTPException
-from typing import Optional
 
-from app.services.legal_apis import get_legal_data_service
+from fastapi import APIRouter, HTTPException, Query
+
 from app.services.ingestion import get_ingestion_service
+from app.services.legal_apis import get_legal_data_service
 
 router = APIRouter()
 
@@ -12,7 +12,7 @@ router = APIRouter()
 @router.get("/search")
 async def search_sources(
     query: str = Query(..., min_length=2, description="Search query"),
-    source: Optional[str] = Query(None, description="Limit to specific source: ecfr, congress, courtlistener"),
+    source: str | None = Query(None, description="Limit to specific source: ecfr, congress, courtlistener"),
     limit: int = Query(10, le=50, description="Results per source"),
 ):
     """
@@ -55,7 +55,7 @@ async def get_cfr_structure(title: int):
 async def import_cfr_regulation(
     title: int = Query(..., description="CFR title number"),
     part: int = Query(..., description="CFR part number"),
-    section: Optional[str] = Query(None, description="Specific section (e.g., '1.1')"),
+    section: str | None = Query(None, description="Specific section (e.g., '1.1')"),
 ):
     """
     Import a CFR regulation into the knowledge base.
@@ -122,7 +122,7 @@ async def get_public_laws(
 @router.get("/courtlistener/search")
 async def search_court_opinions(
     query: str = Query(..., min_length=2),
-    court: Optional[str] = Query(None, description="Court ID to filter by"),
+    court: str | None = Query(None, description="Court ID to filter by"),
     limit: int = Query(20, le=100),
 ):
     """Search court opinions from CourtListener."""

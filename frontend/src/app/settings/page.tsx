@@ -162,7 +162,7 @@ function SettingsSection({
   children: React.ReactNode
 }) {
   return (
-    <div className="bg-vulcan-800/50 backdrop-blur-sm rounded-xl border border-vulcan-700/50 p-5">
+    <div className="bg-vulcan-800 rounded-xl border border-vulcan-700 p-5">
       <div className="flex items-start gap-3 mb-4">
         <div className="p-2 bg-vulcan-700/50 rounded-lg">
           <Icon className="w-4 h-4 text-vulcan-300" />

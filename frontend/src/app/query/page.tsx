@@ -4,7 +4,6 @@ import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { QueryInterface } from '@/components/QueryInterface'
 import { PageHeader } from '@/components/PageHeader'
-import { ConstellationBackground } from '@/components/ConstellationBackground'
 import { Search } from 'lucide-react'
 
 function QueryContent() {
@@ -13,7 +12,7 @@ function QueryContent() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
-      <div className="bg-vulcan-800/50 backdrop-blur-sm rounded-xl border border-vulcan-700/50 p-6">
+      <div className="bg-vulcan-800 rounded-xl border border-vulcan-700 p-6">
         <QueryInterface initialQuery={initialQuery} autoSubmit={!!initialQuery} />
       </div>
 
@@ -38,18 +37,7 @@ function QueryContent() {
 
 export default function QueryPage() {
   return (
-    <div className="min-h-screen bg-vulcan-900 relative overflow-hidden">
-      {/* Subtle constellation background */}
-      <ConstellationBackground
-        nodeCount={15}
-        connectionDensity={0.2}
-        colorScheme="blue"
-        interactive={false}
-        speed={0.3}
-        showOrbs={true}
-        showGrid={true}
-        opacity={0.4}
-      />
+    <div className="min-h-screen bg-vulcan-900">
       <PageHeader
         icon={Search}
         title="Regulatory Query"
@@ -58,7 +46,7 @@ export default function QueryPage() {
 
       <Suspense fallback={
         <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="bg-vulcan-800/50 backdrop-blur-sm rounded-xl border border-vulcan-700/50 p-6 flex items-center justify-center h-64">
+          <div className="bg-vulcan-800 rounded-xl border border-vulcan-700 p-6 flex items-center justify-center h-64">
             <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
           </div>
         </div>
@@ -71,8 +59,8 @@ export default function QueryPage() {
 
 function HelpCard({ title, description }: { title: string; description: string }) {
   return (
-    <div className="bg-vulcan-800/30 backdrop-blur-sm rounded-xl p-4 border border-vulcan-700/50">
-      <h3 className="font-medium text-white text-sm">{title}</h3>
+    <div className="bg-vulcan-800 rounded-xl p-4 border border-vulcan-700">
+      <h3 className="font-medium text-vulcan-100 text-sm">{title}</h3>
       <p className="text-xs text-vulcan-400 mt-1">{description}</p>
     </div>
   )

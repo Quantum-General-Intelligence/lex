@@ -1,24 +1,12 @@
 'use client'
 
-import { GraphViewer } from '@/components/GraphViewer'
+import { CytoscapeGraphViewer } from '@/components/CytoscapeGraphViewer'
 import { PageHeader } from '@/components/PageHeader'
-import { ConstellationBackground } from '@/components/ConstellationBackground'
 import { GitBranch } from 'lucide-react'
 
 export default function GraphPage() {
   return (
-    <div className="min-h-screen bg-vulcan-900 relative overflow-hidden">
-      {/* Purple-themed constellation for graph page */}
-      <ConstellationBackground
-        nodeCount={20}
-        connectionDensity={0.35}
-        colorScheme="purple"
-        interactive={false}
-        speed={0.4}
-        showOrbs={true}
-        showGrid={true}
-        opacity={0.35}
-      />
+    <div className="min-h-screen bg-vulcan-900">
       <PageHeader
         icon={GitBranch}
         iconColor="text-purple-400"
@@ -27,8 +15,8 @@ export default function GraphPage() {
       />
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="bg-vulcan-800/50 backdrop-blur-sm rounded-xl border border-vulcan-700/50 p-6">
-          <GraphViewer />
+        <div className="bg-vulcan-800 rounded-xl border border-vulcan-700 p-6">
+          <CytoscapeGraphViewer />
         </div>
 
         {/* Info section */}

@@ -2,14 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { ZoomIn, ZoomOut, Maximize2, RefreshCw, X, ArrowRight, ArrowLeft, FileText, ChevronRight, Link2, Search, Loader2, Expand, Plus } from 'lucide-react'
-import dynamic from 'next/dynamic'
 import { NODE_COLORS, NODE_ICONS, RELATIONSHIP_LABELS } from '@/constants/legalNodeConfig'
 import { DEMO_GRAPH_DATA, DEMO_NODE_DETAILS } from '@/constants/demoData'
 import { API_BASE_URL } from '@/lib/api'
-import { NodeDetailsSkeleton, GraphSkeleton } from '@/components/Skeleton'
-
-// Dynamically import force graph to avoid SSR issues
-const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false })
+import { NodeDetailsSkeleton } from '@/components/Skeleton'
 
 interface GraphNode {
   id: string
@@ -17,9 +13,6 @@ interface GraphNode {
   citation?: string
   type: string
   jurisdiction?: string
-  // These are added by react-force-graph at runtime
-  x?: number
-  y?: number
 }
 
 interface GraphLink {
@@ -57,9 +50,6 @@ interface NodeDetails {
   }[]
 }
 
-// Use shared demo data
-const DEMO_DATA: GraphData = DEMO_GRAPH_DATA
-
 interface AuthorityChainNode {
   id: string
   title: string
@@ -67,7 +57,10 @@ interface AuthorityChainNode {
   type: string
 }
 
-export function GraphViewer() {
+// Use shared demo data
+const DEMO_DATA: GraphData = DEMO_GRAPH_DATA
+
+export function CytoscapeGraphViewer() {
   const [graphData, setGraphData] = useState<GraphData>(DEMO_DATA)
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null)
   const [nodeDetails, setNodeDetails] = useState<NodeDetails | null>(null)
@@ -79,8 +72,247 @@ export function GraphViewer() {
   const [searchResults, setSearchResults] = useState<GraphNode[]>([])
   const [showSearch, setShowSearch] = useState(false)
   const [expandingNode, setExpandingNode] = useState<string | null>(null)
-  const graphRef = useRef<any>(null)
+  const [cyReady, setCyReady] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const cyRef = useRef<any>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Initialize Cytoscape
+  useEffect(() => {
+    if (typeof window === 'undefined' || !containerRef.current) return
+
+    // Dynamically import cytoscape only on client side
+    import('cytoscape').then((cytoscapeModule) => {
+      const cytoscape = cytoscapeModule.default
+
+      const cy = cytoscape({
+        container: containerRef.current,
+        elements: [],
+        style: [
+          // Core/container background
+          {
+            selector: 'core',
+            style: {
+              'active-bg-color': '#0a0e1a',
+              'active-bg-opacity': 0,
+            } as any,
+          },
+          {
+            selector: 'node',
+            style: {
+              'background-color': 'data(color)',
+              'label': 'data(label)',
+              'color': '#e2e8f0',
+              'text-valign': 'bottom',
+              'text-halign': 'center',
+              'text-margin-y': 8,
+              'font-size': '11px',
+              'font-weight': 500,
+              'font-family': 'Inter, system-ui, sans-serif',
+              'text-outline-color': '#0a0e1a',
+              'text-outline-width': 2,
+              'text-outline-opacity': 0.8,
+              'width': 16,
+              'height': 16,
+              'border-width': 2,
+              'border-color': '#1c2333',
+              'text-wrap': 'ellipsis',
+              'text-max-width': '120px',
+            } as any,
+          },
+          {
+            selector: 'node.selected',
+            style: {
+              'border-width': 4,
+              'border-color': 'data(color)',
+              'width': 22,
+              'height': 22,
+            } as any,
+          },
+          {
+            selector: 'node:active',
+            style: {
+              'overlay-opacity': 0,
+            } as any,
+          },
+          {
+            selector: 'edge',
+            style: {
+              'width': 1.5,
+              'line-color': '#4a5568',
+              'target-arrow-color': '#4a5568',
+              'target-arrow-shape': 'triangle',
+              'arrow-scale': 0.8,
+              'curve-style': 'bezier',
+              // Hide edge labels by default
+              'label': '',
+            } as any,
+          },
+          {
+            selector: 'edge:active',
+            style: {
+              'overlay-opacity': 0,
+            } as any,
+          },
+          {
+            selector: 'edge.highlighted',
+            style: {
+              'line-color': '#8b5cf6',
+              'target-arrow-color': '#8b5cf6',
+              'width': 2.5,
+              // Show label on hover
+              'label': 'data(label)',
+              'font-size': '10px',
+              'font-weight': 600,
+              'color': '#c4b5fd',
+              'text-rotation': 'autorotate',
+              'text-margin-y': -12,
+              'text-outline-color': '#0a0e1a',
+              'text-outline-width': 2,
+              'text-background-color': '#1e1b4b',
+              'text-background-opacity': 0.9,
+              'text-background-padding': '4px',
+              'text-background-shape': 'roundrectangle',
+            } as any,
+          },
+        ],
+        layout: { name: 'preset' },
+        wheelSensitivity: 0.3,
+        minZoom: 0.3,
+        maxZoom: 3,
+      })
+
+      // Node click handler
+      cy.on('tap', 'node', (e: any) => {
+        const node = e.target
+        const nodeData = node.data()
+
+        const graphNode: GraphNode = {
+          id: nodeData.id,
+          title: nodeData.fullLabel,
+          citation: nodeData.citation,
+          type: nodeData.type,
+        }
+
+        setSelectedNode(graphNode)
+        fetchNodeDetails(nodeData.id)
+        fetchAuthorityChain(nodeData.id, nodeData.type)
+
+        // Update selected class
+        cy.nodes().removeClass('selected')
+        node.addClass('selected')
+
+        // Center on node
+        cy.animate({
+          center: { eles: node },
+          zoom: 2,
+          duration: 500,
+        })
+      })
+
+      // Hover effects
+      cy.on('mouseover', 'node', (e: any) => {
+        const node = e.target
+        containerRef.current!.style.cursor = 'pointer'
+        node.connectedEdges().addClass('highlighted')
+      })
+
+      cy.on('mouseout', 'node', (e: any) => {
+        const node = e.target
+        containerRef.current!.style.cursor = 'default'
+        node.connectedEdges().removeClass('highlighted')
+      })
+
+      // Edge hover - show label on direct edge hover too
+      cy.on('mouseover', 'edge', (e: any) => {
+        const edge = e.target
+        containerRef.current!.style.cursor = 'pointer'
+        edge.addClass('highlighted')
+      })
+
+      cy.on('mouseout', 'edge', (e: any) => {
+        const edge = e.target
+        containerRef.current!.style.cursor = 'default'
+        edge.removeClass('highlighted')
+      })
+
+      cyRef.current = cy
+      setCyReady(true)
+    })
+
+    return () => {
+      if (cyRef.current) {
+        cyRef.current.destroy()
+      }
+    }
+  }, [])
+
+  // Update elements when graph data changes
+  useEffect(() => {
+    if (!cyRef.current || !cyReady) return
+
+    const cy = cyRef.current
+
+    // Clear existing elements
+    cy.elements().remove()
+
+    // Add nodes
+    const nodeElements = graphData.nodes.map(node => ({
+      group: 'nodes' as const,
+      data: {
+        id: node.id,
+        label: node.title.length > 25 ? node.title.substring(0, 25) + '...' : node.title,
+        fullLabel: node.title,
+        citation: node.citation,
+        type: node.type,
+        color: NODE_COLORS[node.type] || '#64748b',
+      },
+    }))
+
+    // Add edges
+    const edgeElements = graphData.links.map(link => {
+      const sourceId = typeof link.source === 'string' ? link.source : (link.source as any).id
+      const targetId = typeof link.target === 'string' ? link.target : (link.target as any).id
+      return {
+        group: 'edges' as const,
+        data: {
+          id: `${sourceId}-${targetId}-${link.type}`,
+          source: sourceId,
+          target: targetId,
+          label: link.type,
+          type: link.type,
+        },
+      }
+    })
+
+    cy.add([...nodeElements, ...edgeElements])
+
+    // Apply layout with increased spacing
+    cy.layout({
+      name: 'cose',
+      animate: true,
+      animationDuration: 500,
+      nodeRepulsion: () => 15000,  // Increased from 8000 for more spacing
+      idealEdgeLength: () => 150,   // Increased from 100
+      edgeElasticity: () => 45,     // Lower elasticity = more spread
+      nestingFactor: 0.1,
+      gravity: 0.15,                // Lower gravity = nodes spread more
+      numIter: 1500,                // More iterations for better layout
+      initialTemp: 250,
+      coolingFactor: 0.95,
+      minTemp: 1.0,
+      randomize: true,
+      nodeDimensionsIncludeLabels: true,  // Account for labels in spacing
+    } as any).run()
+
+    // Re-apply selected class if needed
+    if (selectedNode) {
+      const node = cy.getElementById(selectedNode.id)
+      if (node.length > 0) {
+        node.addClass('selected')
+      }
+    }
+  }, [graphData, cyReady])
 
   const fetchGraphData = async () => {
     setLoading(true)
@@ -185,7 +417,7 @@ export function GraphViewer() {
         const chain = buildDemoAuthorityChain(nodeId)
         setAuthorityChain(chain)
       }
-    } catch (err) {
+    } catch {
       // Generate demo authority chain based on graph links
       const chain = buildDemoAuthorityChain(nodeId)
       setAuthorityChain(chain)
@@ -392,53 +624,62 @@ export function GraphViewer() {
     setSelectedNode(node)
     fetchNodeDetails(node.id)
     fetchAuthorityChain(node.id, node.type)
-    if (graphRef.current && node.x !== undefined) {
-      graphRef.current.centerAt(node.x, node.y, 1000)
-      graphRef.current.zoom(2, 1000)
+
+    // Find and center on node in Cytoscape
+    if (cyRef.current) {
+      const cy = cyRef.current
+      cy.nodes().removeClass('selected')
+      const cyNode = cy.getElementById(node.id)
+      if (cyNode.length > 0) {
+        cyNode.addClass('selected')
+        cy.animate({
+          center: { eles: cyNode },
+          zoom: 2,
+          duration: 500,
+        })
+      }
     }
   }
 
-  const handleNodeClick = useCallback((node: any) => {
-    setSelectedNode(node as GraphNode)
-    fetchNodeDetails(node.id)
-    fetchAuthorityChain(node.id, node.type)
-    // Center on node
-    if (graphRef.current) {
-      graphRef.current.centerAt(node.x, node.y, 1000)
-      graphRef.current.zoom(2, 1000)
-    }
-  }, [graphData])
-
   const handleRelationshipNodeClick = (nodeId: string) => {
-    // Find the node in graph data and select it
     const node = graphData.nodes.find(n => n.id === nodeId)
     if (node) {
       setSelectedNode(node)
       fetchNodeDetails(nodeId)
       fetchAuthorityChain(nodeId, node.type)
-      // Center on the node if it has coordinates
-      if (graphRef.current && (node as any).x !== undefined) {
-        graphRef.current.centerAt((node as any).x, (node as any).y, 1000)
-        graphRef.current.zoom(2, 1000)
+
+      // Center on node in Cytoscape
+      if (cyRef.current) {
+        const cy = cyRef.current
+        cy.nodes().removeClass('selected')
+        const cyNode = cy.getElementById(nodeId)
+        if (cyNode.length > 0) {
+          cyNode.addClass('selected')
+          cy.animate({
+            center: { eles: cyNode },
+            zoom: 2,
+            duration: 500,
+          })
+        }
       }
     }
   }
 
   const handleZoomIn = () => {
-    if (graphRef.current) {
-      graphRef.current.zoom(graphRef.current.zoom() * 1.5, 300)
+    if (cyRef.current) {
+      cyRef.current.zoom(cyRef.current.zoom() * 1.5)
     }
   }
 
   const handleZoomOut = () => {
-    if (graphRef.current) {
-      graphRef.current.zoom(graphRef.current.zoom() / 1.5, 300)
+    if (cyRef.current) {
+      cyRef.current.zoom(cyRef.current.zoom() / 1.5)
     }
   }
 
   const handleFitView = () => {
-    if (graphRef.current) {
-      graphRef.current.zoomToFit(400)
+    if (cyRef.current) {
+      cyRef.current.fit(undefined, 50)
     }
   }
 
@@ -446,6 +687,9 @@ export function GraphViewer() {
     setSelectedNode(null)
     setNodeDetails(null)
     setAuthorityChain([])
+    if (cyRef.current) {
+      cyRef.current.nodes().removeClass('selected')
+    }
   }
 
   // Group relationships by type
@@ -564,61 +808,12 @@ export function GraphViewer() {
           ))}
         </div>
 
-        {/* Graph */}
-        <div className="graph-container h-[calc(100vh-320px)] min-h-[400px] max-h-[700px] relative rounded-xl overflow-hidden border border-vulcan-700/50 bg-vulcan-900">
-          <ForceGraph2D
-            ref={graphRef}
-            graphData={graphData}
-            nodeLabel={(node: any) => `${node.title}${node.citation ? ` (${node.citation})` : ''}`}
-            nodeColor={(node: any) => NODE_COLORS[node.type] || '#64748b'}
-            nodeRelSize={8}
-            linkColor={() => '#4a5568'}
-            linkWidth={1.5}
-            linkDirectionalArrowLength={5}
-            linkDirectionalArrowRelPos={1}
-            linkLabel={(link: any) => link.type}
-            onNodeClick={handleNodeClick}
-            onNodeDragEnd={(node: any) => {
-              // Fix node position after drag
-              node.fx = node.x
-              node.fy = node.y
-            }}
-            enableNodeDrag={true}
-            enableZoomInteraction={true}
-            enablePanInteraction={true}
-            cooldownTicks={100}
-            backgroundColor="#0a0e1a"
-            nodeCanvasObject={(node: any, ctx, globalScale) => {
-              const label = node.title?.substring(0, 18) || ''
-              const fontSize = 11 / globalScale
-              ctx.font = `500 ${fontSize}px Inter, system-ui, sans-serif`
-              ctx.fillStyle = NODE_COLORS[node.type] || '#64748b'
-              ctx.beginPath()
-              ctx.arc(node.x, node.y, 7, 0, 2 * Math.PI)
-              ctx.fill()
-
-              // Highlight selected node
-              if (selectedNode && node.id === selectedNode.id) {
-                ctx.strokeStyle = NODE_COLORS[node.type] || '#64748b'
-                ctx.lineWidth = 3 / globalScale
-                ctx.beginPath()
-                ctx.arc(node.x, node.y, 10, 0, 2 * Math.PI)
-                ctx.stroke()
-              } else {
-                ctx.strokeStyle = '#1c2333'
-                ctx.lineWidth = 1.5 / globalScale
-                ctx.stroke()
-              }
-
-              if (globalScale > 0.7) {
-                ctx.textAlign = 'center'
-                ctx.textBaseline = 'top'
-                ctx.fillStyle = '#a0aec0'
-                ctx.fillText(label, node.x, node.y + 10)
-              }
-            }}
-          />
-        </div>
+        {/* Graph - using direct cytoscape instead of react-cytoscapejs */}
+        <div
+          ref={containerRef}
+          className="graph-container h-[calc(100vh-320px)] min-h-[400px] max-h-[700px] relative rounded-xl overflow-hidden border border-vulcan-700/50"
+          style={{ backgroundColor: '#0a0e1a' }}
+        />
       </div>
 
       {/* Details Panel */}

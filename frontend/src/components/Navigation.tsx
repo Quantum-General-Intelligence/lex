@@ -33,7 +33,7 @@ export function Navigation() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-vulcan-900/80 backdrop-blur-xl border-b border-vulcan-700/50">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-vulcan-900 border-b border-vulcan-700">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -63,7 +63,7 @@ export function Navigation() {
                     {/* Dropdown */}
                     {modulesOpen && (
                       <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4">
-                        <div className="bg-vulcan-800 border border-vulcan-600 rounded-xl shadow-xl p-2 min-w-[240px]">
+                        <div className="bg-vulcan-800 border border-vulcan-700 rounded-xl shadow-xl p-2 min-w-[240px]">
                           {item.children.map((child) => (
                             <Link
                               key={child.name}
@@ -108,7 +108,7 @@ export function Navigation() {
                 onMouseEnter={() => setUserMenuOpen(true)}
                 onMouseLeave={() => setUserMenuOpen(false)}
               >
-                <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-vulcan-800 border border-vulcan-600 hover:border-vulcan-500 transition-colors">
+                <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-vulcan-800 border border-vulcan-700 hover:border-vulcan-600 transition-colors">
                   <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center">
                     <User className="w-3.5 h-3.5 text-accent" />
                   </div>
@@ -118,7 +118,7 @@ export function Navigation() {
 
                 {userMenuOpen && (
                   <div className="absolute top-full right-0 pt-2">
-                    <div className="bg-vulcan-800 border border-vulcan-600 rounded-xl shadow-xl p-2 min-w-[180px]">
+                    <div className="bg-vulcan-800 border border-vulcan-700 rounded-xl shadow-xl p-2 min-w-[180px]">
                       <div className="px-3 py-2 border-b border-vulcan-700">
                         <div className="text-sm font-medium text-white">{session.user?.name}</div>
                         <div className="text-xs text-vulcan-400">{session.user?.email}</div>
@@ -148,7 +148,7 @@ export function Navigation() {
             ) : (
               <Link
                 href="/login"
-                className="px-5 py-2 bg-accent hover:bg-accent-hover text-white rounded-full text-sm font-medium transition-colors"
+                className="px-5 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg text-sm font-medium transition-colors"
               >
                 Sign in
               </Link>

@@ -1,9 +1,8 @@
 """Legal API integrations for fetching data from public sources."""
 
 import logging
-import re
-from typing import Optional
 from datetime import datetime
+
 import httpx
 
 from app.core.config import get_settings
@@ -32,7 +31,7 @@ class ECFRClient:
             logger.error(f"Failed to fetch eCFR titles: {e}")
             return []
 
-    async def get_structure(self, title: int, date: Optional[str] = None) -> dict:
+    async def get_structure(self, title: int, date: str | None = None) -> dict:
         """Get the structure (table of contents) for a CFR title."""
         try:
             date_param = date or datetime.now().strftime("%Y-%m-%d")
@@ -46,7 +45,7 @@ class ECFRClient:
             return {}
 
     async def get_full_text(
-        self, title: int, part: Optional[int] = None, section: Optional[str] = None
+        self, title: int, part: int | None = None, section: str | None = None
     ) -> dict:
         """Get full text of a CFR section or part."""
         try:
@@ -68,7 +67,7 @@ class ECFRClient:
     async def search(
         self,
         query: str,
-        title: Optional[int] = None,
+        title: int | None = None,
         per_page: int = 20,
         page: int = 1,
     ) -> dict:
@@ -89,7 +88,7 @@ class ECFRClient:
             logger.error(f"eCFR search failed: {e}")
             return {"results": []}
 
-    def parse_citation(self, title: int, part: int, section: Optional[str] = None) -> str:
+    def parse_citation(self, title: int, part: int, section: str | None = None) -> str:
         """Generate a CFR citation string."""
         if section:
             return f"{title} CFR {part}.{section}"
@@ -101,7 +100,7 @@ class CongressClient:
 
     BASE_URL = "https://api.congress.gov/v3"
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         self.api_key = api_key or settings.openai_api_key  # Reuse or set dedicated key
         self.client = httpx.AsyncClient(timeout=30.0)
 
@@ -152,7 +151,7 @@ class CongressClient:
     async def search_bills(
         self,
         query: str,
-        congress: Optional[int] = None,
+        congress: int | None = None,
         limit: int = 20,
     ) -> list[dict]:
         """Search for bills by keyword."""
@@ -190,7 +189,7 @@ class CourtListenerClient:
 
     BASE_URL = "https://www.courtlistener.com/api/rest/v3"
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         self.api_key = api_key
         self.client = httpx.AsyncClient(timeout=30.0)
 
@@ -203,7 +202,7 @@ class CourtListenerClient:
     async def search_opinions(
         self,
         query: str,
-        court: Optional[str] = None,
+        court: str | None = None,
         limit: int = 20,
     ) -> list[dict]:
         """Search court opinions."""
@@ -256,7 +255,7 @@ class CourtListenerClient:
             return []
 
     def parse_case_citation(
-        self, case_name: str, volume: Optional[str] = None, reporter: Optional[str] = None, page: Optional[str] = None
+        self, case_name: str, volume: str | None = None, reporter: str | None = None, page: str | None = None
     ) -> str:
         """Generate a case citation string."""
         if volume and reporter and page:
@@ -275,7 +274,7 @@ class LegalDataService:
     async def search_regulations(
         self,
         query: str,
-        title: Optional[int] = None,
+        title: int | None = None,
         limit: int = 20,
     ) -> list[dict]:
         """Search for federal regulations."""
@@ -300,7 +299,7 @@ class LegalDataService:
     async def search_statutes(
         self,
         query: str,
-        congress: Optional[int] = None,
+        congress: int | None = None,
         limit: int = 20,
     ) -> list[dict]:
         """Search for federal statutes and bills."""
@@ -330,7 +329,7 @@ class LegalDataService:
     async def search_case_law(
         self,
         query: str,
-        court: Optional[str] = None,
+        court: str | None = None,
         limit: int = 20,
     ) -> list[dict]:
         """Search for court opinions."""
@@ -373,7 +372,7 @@ class LegalDataService:
             "case_law": results[2] if not isinstance(results[2], Exception) else [],
         }
 
-    async def import_regulation(self, title: int, part: int, section: Optional[str] = None) -> dict:
+    async def import_regulation(self, title: int, part: int, section: str | None = None) -> dict:
         """Import a specific CFR regulation for ingestion."""
         full_text = await self.ecfr.get_full_text(title, part, section)
         if not full_text:

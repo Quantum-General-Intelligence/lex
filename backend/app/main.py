@@ -1,11 +1,13 @@
+from contextlib import asynccontextmanager
+
+import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-import structlog
 
-from app.core.config import get_settings
-from app.core.database import init_databases, close_databases
 from app.api.routes import api_router
+from app.core.config import get_settings
+from app.core.database import close_databases, init_databases
+from app.core.logging import RequestLoggingMiddleware
 
 settings = get_settings()
 
@@ -94,6 +96,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Request logging middleware - logs all requests with timing
+app.add_middleware(RequestLoggingMiddleware)
 
 # Include API routes
 app.include_router(api_router, prefix="/api")

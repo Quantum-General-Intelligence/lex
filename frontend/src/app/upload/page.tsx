@@ -129,7 +129,7 @@ export default function UploadPage() {
           <div className="lg:col-span-2">
             <div
               className={`
-                bg-vulcan-800/50 backdrop-blur-sm rounded-xl border-2 border-dashed p-10 text-center
+                bg-vulcan-800 rounded-xl border-2 border-dashed p-10 text-center
                 transition-all cursor-pointer
                 ${isDragging ? 'border-accent bg-accent/5' : 'border-vulcan-600 hover:border-vulcan-500'}
               `}
@@ -163,7 +163,7 @@ export default function UploadPage() {
             </div>
 
             {files.length > 0 && (
-              <div className="mt-6 bg-vulcan-800/50 backdrop-blur-sm rounded-xl border border-vulcan-700/50 overflow-hidden">
+              <div className="mt-6 bg-vulcan-800 rounded-xl border border-vulcan-700 overflow-hidden">
                 <div className="px-4 py-3 border-b border-vulcan-700/50 flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-white">Uploaded Files ({files.length})</h3>
                   <button
@@ -247,7 +247,7 @@ export default function UploadPage() {
           <div className="space-y-6">
             {/* Selected File Details */}
             {selectedFile?.result && (
-              <div className="bg-vulcan-800/50 backdrop-blur-sm rounded-xl border border-vulcan-700/50 p-4">
+              <div className="bg-vulcan-800 rounded-xl border border-vulcan-700 p-4">
                 <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-accent" />
                   Processing Results
@@ -310,7 +310,7 @@ export default function UploadPage() {
             )}
 
             {/* Processing Info */}
-            <div className="bg-vulcan-800/50 backdrop-blur-sm rounded-xl border border-vulcan-700/50 p-4">
+            <div className="bg-vulcan-800 rounded-xl border border-vulcan-700 p-4">
               <h3 className="text-sm font-semibold text-white mb-3">Document Processing</h3>
               <ul className="space-y-2.5 text-xs text-vulcan-300">
                 <li className="flex items-start gap-2">

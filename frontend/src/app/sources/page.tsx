@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { Database, Search, Download, CheckCircle, AlertCircle, Loader2, ExternalLink, FileText, Scale, Building } from 'lucide-react'
 import { PageHeader } from '@/components/PageHeader'
-import { ConstellationBackground } from '@/components/ConstellationBackground'
 import { API_BASE_URL } from '@/lib/api'
 
 interface SourceStatus {
@@ -48,7 +47,6 @@ export default function SourcesPage() {
         setSources(data.sources)
       }
     } catch {
-      // Set demo statuses
       setSources({
         ecfr: { name: 'eCFR', status: 'available', base_url: 'https://www.ecfr.gov' },
         congress: { name: 'Congress.gov', status: 'requires_api_key', base_url: 'https://api.congress.gov', note: 'Requires API key' },
@@ -69,7 +67,6 @@ export default function SourcesPage() {
         const data = await res.json()
         setSearchResults(data)
       } else {
-        // Demo results
         setSearchResults({
           regulations: [
             { source: 'ecfr', type: 'Regulation', title: 'Privacy Act Regulations', citation: '34 CFR 5b', text: 'Regulations implementing the Privacy Act...', url: 'https://ecfr.gov', metadata: {} },
@@ -92,7 +89,6 @@ export default function SourcesPage() {
   const handleImport = async (result: SearchResult) => {
     setImporting(result.citation)
     try {
-      // For demo, just simulate success
       await new Promise(resolve => setTimeout(resolve, 1500))
       setImportSuccess(result.citation)
       setTimeout(() => setImportSuccess(null), 3000)
@@ -115,7 +111,7 @@ export default function SourcesPage() {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'Regulation':
-        return <FileText className="w-4 h-4 text-blue-400" />
+        return <FileText className="w-4 h-4 text-indigo-400" />
       case 'Statute':
         return <Building className="w-4 h-4 text-purple-400" />
       case 'CaseLaw':
@@ -130,18 +126,7 @@ export default function SourcesPage() {
     : []
 
   return (
-    <div className="min-h-screen bg-vulcan-900 relative overflow-hidden">
-      {/* Purple constellation for data sources */}
-      <ConstellationBackground
-        nodeCount={18}
-        connectionDensity={0.25}
-        colorScheme="purple"
-        interactive={false}
-        speed={0.35}
-        showOrbs={true}
-        showGrid={true}
-        opacity={0.35}
-      />
+    <div className="min-h-screen bg-vulcan-900">
       <PageHeader
         icon={Database}
         iconColor="text-purple-400"
@@ -154,16 +139,16 @@ export default function SourcesPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="bg-vulcan-800/50 rounded-xl border border-vulcan-700/50 p-4 animate-pulse">
+              <div key={i} className="bg-vulcan-800 rounded-xl border border-vulcan-700 p-4 animate-pulse">
                 <div className="h-5 bg-vulcan-700 rounded w-1/2 mb-2" />
                 <div className="h-4 bg-vulcan-700 rounded w-3/4" />
               </div>
             ))
           ) : (
             Object.entries(sources).map(([key, source]) => (
-              <div key={key} className="bg-vulcan-800/50 rounded-xl border border-vulcan-700/50 p-4 hover:border-vulcan-600 transition-colors">
+              <div key={key} className="bg-vulcan-800 rounded-xl border border-vulcan-700 p-4 hover:border-vulcan-600 transition-colors">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-medium text-white">{source.name}</h3>
+                  <h3 className="font-medium text-vulcan-100">{source.name}</h3>
                   {getStatusIcon(source.status)}
                 </div>
                 <p className="text-sm text-vulcan-400">
@@ -183,9 +168,9 @@ export default function SourcesPage() {
         </div>
 
         {/* Search Section */}
-        <div className="bg-vulcan-800/50 rounded-xl border border-vulcan-700/50 overflow-hidden">
-          <div className="p-4 border-b border-vulcan-700/50">
-            <h2 className="font-semibold text-white mb-3">Search Legal Sources</h2>
+        <div className="bg-vulcan-800 rounded-xl border border-vulcan-700 overflow-hidden">
+          <div className="p-4 border-b border-vulcan-700">
+            <h2 className="font-semibold text-vulcan-100 mb-3">Search Legal Sources</h2>
             <div className="flex gap-3">
               <div className="flex-1 relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-vulcan-500" />
@@ -195,7 +180,7 @@ export default function SourcesPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                   placeholder="Search regulations, statutes, and case law..."
-                  className="w-full pl-11 pr-4 py-2.5 bg-vulcan-900 border border-vulcan-600 rounded-lg text-white placeholder-vulcan-500 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+                  className="w-full pl-11 pr-4 py-2.5 bg-vulcan-900 border border-vulcan-600 rounded-lg text-vulcan-100 placeholder-vulcan-500 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                 />
               </div>
               <button
@@ -211,7 +196,7 @@ export default function SourcesPage() {
 
           {/* Results */}
           {searchResults && (
-            <div className="divide-y divide-vulcan-700/50">
+            <div className="divide-y divide-vulcan-700">
               {allResults.length === 0 ? (
                 <div className="p-8 text-center">
                   <Database className="w-12 h-12 text-vulcan-600 mx-auto mb-3" />
@@ -220,19 +205,19 @@ export default function SourcesPage() {
                 </div>
               ) : (
                 allResults.map((result, i) => (
-                  <div key={i} className="p-4 hover:bg-vulcan-700/30 transition-colors">
+                  <div key={i} className="p-4 hover:bg-vulcan-700/50 transition-colors">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           {getTypeIcon(result.type)}
-                          <h4 className="font-medium text-white truncate">{result.title}</h4>
+                          <h4 className="font-medium text-vulcan-100 truncate">{result.title}</h4>
                         </div>
                         {result.citation && (
                           <p className="text-sm font-mono text-accent mt-0.5">{result.citation}</p>
                         )}
                         <p className="text-sm text-vulcan-400 mt-1 line-clamp-2">{result.text}</p>
                         <div className="flex items-center gap-3 mt-2">
-                          <span className="text-xs px-2 py-0.5 bg-vulcan-700/50 text-vulcan-400 rounded-full">
+                          <span className="text-xs px-2 py-0.5 bg-vulcan-700 text-vulcan-400 rounded-full">
                             {result.source}
                           </span>
                           <a
@@ -250,8 +235,8 @@ export default function SourcesPage() {
                         disabled={importing === result.citation}
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
                           importSuccess === result.citation
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                            : 'bg-vulcan-700 hover:bg-vulcan-600 text-white'
+                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            : 'bg-vulcan-700 hover:bg-vulcan-600 text-vulcan-100'
                         }`}
                       >
                         {importing === result.citation ? (
@@ -276,7 +261,7 @@ export default function SourcesPage() {
               <div className="w-16 h-16 bg-purple-500/10 border border-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Database className="w-8 h-8 text-purple-400" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Search Official Legal Sources</h3>
+              <h3 className="text-lg font-semibold text-vulcan-100 mb-2">Search Official Legal Sources</h3>
               <p className="text-vulcan-400 max-w-md mx-auto text-sm">
                 Search across the Code of Federal Regulations (eCFR), Congressional legislation, and court opinions.
                 Import documents directly into your knowledge base.
@@ -286,22 +271,22 @@ export default function SourcesPage() {
         </div>
 
         {/* Quick Import Section */}
-        <div className="bg-vulcan-800/50 rounded-xl border border-vulcan-700/50 p-6">
-          <h2 className="font-semibold text-white mb-4">Quick Import</h2>
+        <div className="bg-vulcan-800 rounded-xl border border-vulcan-700 p-6">
+          <h2 className="font-semibold text-vulcan-100 mb-4">Quick Import</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <button className="p-4 bg-vulcan-900 hover:bg-vulcan-700/50 rounded-xl border border-vulcan-700 hover:border-vulcan-600 transition-colors text-left">
-              <FileText className="w-6 h-6 text-blue-400 mb-2" />
-              <h4 className="font-medium text-white">CFR Title</h4>
+            <button className="p-4 bg-vulcan-900 hover:bg-vulcan-700 rounded-xl border border-vulcan-700 hover:border-vulcan-600 transition-colors text-left">
+              <FileText className="w-6 h-6 text-indigo-400 mb-2" />
+              <h4 className="font-medium text-vulcan-100">CFR Title</h4>
               <p className="text-xs text-vulcan-400 mt-1">Import an entire CFR title</p>
             </button>
-            <button className="p-4 bg-vulcan-900 hover:bg-vulcan-700/50 rounded-xl border border-vulcan-700 hover:border-vulcan-600 transition-colors text-left">
+            <button className="p-4 bg-vulcan-900 hover:bg-vulcan-700 rounded-xl border border-vulcan-700 hover:border-vulcan-600 transition-colors text-left">
               <Building className="w-6 h-6 text-purple-400 mb-2" />
-              <h4 className="font-medium text-white">Public Law</h4>
+              <h4 className="font-medium text-vulcan-100">Public Law</h4>
               <p className="text-xs text-vulcan-400 mt-1">Import a specific public law</p>
             </button>
-            <button className="p-4 bg-vulcan-900 hover:bg-vulcan-700/50 rounded-xl border border-vulcan-700 hover:border-vulcan-600 transition-colors text-left">
+            <button className="p-4 bg-vulcan-900 hover:bg-vulcan-700 rounded-xl border border-vulcan-700 hover:border-vulcan-600 transition-colors text-left">
               <Scale className="w-6 h-6 text-amber-400 mb-2" />
-              <h4 className="font-medium text-white">Supreme Court</h4>
+              <h4 className="font-medium text-vulcan-100">Supreme Court</h4>
               <p className="text-xs text-vulcan-400 mt-1">Import Supreme Court opinions</p>
             </button>
           </div>

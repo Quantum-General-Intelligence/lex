@@ -1,15 +1,15 @@
-from fastapi import APIRouter, HTTPException
 import time
-from typing import Optional
 
+from fastapi import APIRouter, HTTPException
+
+from app.core.database import get_chroma_client, neo4j_conn
 from app.schemas.rag import (
+    CommentBatchAnalysisResponse,
     ComplianceCheckRequest,
     ComplianceCheckResponse,
     ComplianceIssue,
-    CommentBatchAnalysisResponse,
     PublicCommentAnalysis,
 )
-from app.core.database import neo4j_conn, get_chroma_client
 
 router = APIRouter()
 
@@ -96,7 +96,7 @@ async def check_compliance(request: ComplianceCheckRequest):
 @router.post("/comments", response_model=CommentBatchAnalysisResponse)
 async def analyze_public_comments(
     comments: list[str],
-    regulation_id: Optional[str] = None,
+    regulation_id: str | None = None,
 ):
     """
     Analyze a batch of public comments for sentiment, topics, and concerns.
@@ -189,7 +189,7 @@ async def analyze_public_comments(
 @router.get("/repeal-candidates")
 async def find_repeal_candidates(
     jurisdiction: str = "federal",
-    agency: Optional[str] = None,
+    agency: str | None = None,
     limit: int = 20,
 ):
     """
@@ -249,7 +249,7 @@ async def find_repeal_candidates(
         if record.get("issue_superseded"):
             issues.append({
                 "type": "superseded",
-                "description": f"Superseded by newer regulation",
+                "description": "Superseded by newer regulation",
                 "severity": "medium",
                 "superseded_by": record["newer"].get("citation") if record.get("newer") else None,
             })
