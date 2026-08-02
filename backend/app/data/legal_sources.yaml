@@ -1,0 +1,1011 @@
+# Legal & Mortgage Research Stack — source registry
+#
+# Free, public, and no-demo-funnel legal data sources.
+#
+# Inclusion rule: every entry is free, has a real free tier, or can be
+# subscribed to online with a credit card. Nothing here requires "book a demo"
+# or "contact sales" — anything gated that way is recorded under `excluded`
+# with the reason, so the decision is not silently re-litigated later.
+#
+# Compiled: 2026-07-31
+#
+# Field reference
+#   slug        stable identifier; never reuse or rename without a migration
+#   access      mcp | api | web | bulk  (what surfaces the source exposes)
+#   cost        free | free_tier | paid
+#   auth        none | api_key | oauth | account
+#   jurisdiction  federal | us | CA | TX | ... | international
+#   tags        free-form; used for filtering (mortgage, foreclosure, ...)
+#
+# `web`-only sources are catalogued deliberately: several of the highest-value
+# records in a foreclosure matter (county recorder instruments, DRE and NMLS
+# licence status) have no API at all, and omitting them would misrepresent the
+# research surface as more automatable than it is.
+
+version: 1
+compiled: "2026-07-31"
+
+sources:
+  # ─────────────────────────────────────────────────────────────────────
+  # 1. General mortgage law — federal
+  # ─────────────────────────────────────────────────────────────────────
+  - slug: cornell-lii
+    name: Cornell Legal Information Institute (LII)
+    category: federal_law
+    jurisdiction: federal
+    access: [web, api]
+    cost: free
+    auth: none
+    homepage: https://www.law.cornell.edu
+    description: >-
+      Full text of the U.S. Code and Code of Federal Regulations with
+      cross-linked annotations. The fastest way to read a federal statute
+      properly. Run by Cornell Law School; no account, no limits.
+    tags: [statutes, regulations, mortgage, reference]
+    key_citations:
+      - "15 U.S.C. § 1601 et seq. (TILA)"
+      - "12 U.S.C. § 2601 et seq. (RESPA)"
+      - "12 C.F.R. Part 1024 (Reg X)"
+      - "12 C.F.R. Part 1026 (Reg Z)"
+
+  - slug: ecfr
+    name: eCFR — Electronic Code of Federal Regulations
+    category: federal_law
+    jurisdiction: federal
+    access: [web, api]
+    cost: free
+    auth: none
+    homepage: https://www.ecfr.gov
+    api_base: https://www.ecfr.gov/api/versioner/v1
+    description: >-
+      The official, continuously updated CFR. Point-in-time versions let you
+      see what a regulation said on a specific date — essential when a loan
+      closed under an earlier rule.
+    tags: [regulations, point_in_time, mortgage]
+    implemented: true
+    client: ECFRClient
+
+  - slug: federal-register
+    name: Federal Register
+    category: federal_law
+    jurisdiction: federal
+    access: [web, api, bulk]
+    cost: free
+    auth: none
+    homepage: https://www.federalregister.gov
+    api_base: https://www.federalregister.gov/api/v1
+    api_docs: https://www.federalregister.gov/developers/api/v1
+    description: >-
+      Proposed and final rules from every federal agency. No key, generous
+      limits, well documented. Tracks CFPB, FHFA, HUD and OCC rulemaking as it
+      happens.
+    tags: [rulemaking, regulations, agencies]
+    implemented: true
+    client: FederalRegisterClient
+
+  - slug: regulations-gov
+    name: Regulations.gov
+    category: federal_law
+    jurisdiction: federal
+    access: [api]
+    cost: free
+    auth: api_key
+    homepage: https://www.regulations.gov
+    api_base: https://api.regulations.gov/v4
+    description: >-
+      Public comment dockets. Free API key issued instantly by email with no
+      approval step. Useful for reading what industry and consumer groups
+      argued about a rule.
+    tags: [public_comments, rulemaking]
+    auth_note: Free API key, issued instantly by email.
+
+  - slug: cfpb
+    name: CFPB — Consumer Financial Protection Bureau
+    category: federal_law
+    jurisdiction: federal
+    access: [web, api, bulk]
+    cost: free
+    auth: none
+    homepage: https://www.consumerfinance.gov
+    api_base: https://www.consumerfinance.gov/data-research/consumer-complaints/search/api/v1
+    description: >-
+      Plain-language explanations of Reg X and Reg Z alongside the official
+      text; the Consumer Complaint Database (searchable by company name); and
+      HMDA loan-level mortgage application data.
+    tags: [mortgage, complaints, hmda, consumer_protection]
+    implemented: true
+    client: CFPBComplaintsClient
+    scope_warning: >-
+      HMDA and most CFPB consumer rules cover CONSUMER mortgages. A
+      business-purpose commercial loan generally falls outside them. Assuming a
+      consumer-protection statute reaches a commercial deed of trust is the
+      most common self-research error.
+
+  - slug: fhfa
+    name: FHFA — Federal Housing Finance Agency
+    category: federal_law
+    jurisdiction: federal
+    access: [web, bulk]
+    cost: free
+    auth: none
+    homepage: https://www.fhfa.gov/data
+    description: >-
+      House Price Index, National Mortgage Database aggregates, Public Use
+      Databases, conforming loan limits and market data. Quarterly
+      foreclosure-prevention reports give state-level context.
+    tags: [mortgage, housing_data, foreclosure]
+
+  - slug: hud
+    name: HUD — Department of Housing and Urban Development
+    category: federal_law
+    jurisdiction: federal
+    access: [web, api]
+    cost: free
+    auth: none
+    homepage: https://www.hud.gov
+    api_docs: https://www.huduser.gov/portal/dataset/fmr-api.html
+    description: >-
+      FHA handbooks, HUD-approved housing counselling agency locator, and the
+      Fair Market Rents API. The counsellor locator is the practical one —
+      free HUD-certified counsellors for the residential side of a foreclosure.
+    tags: [mortgage, fha, counselling, foreclosure]
+
+  - slug: sba-sop
+    name: SBA — SOP 50 10 (lender operating manual)
+    category: federal_law
+    jurisdiction: federal
+    access: [web]
+    cost: free
+    auth: none
+    homepage: https://www.sba.gov/document/sop-50-10-lender-development-company-loan-programs
+    description: >-
+      The lender operating manual for 7(a) and 504 loans. Free PDF. This is
+      where occupancy requirements are actually written down.
+    tags: [sba, lending, commercial]
+
+  - slug: govinfo
+    name: GovInfo (U.S. Government Publishing Office)
+    category: federal_law
+    jurisdiction: federal
+    access: [web, api, bulk]
+    cost: free
+    auth: api_key
+    homepage: https://www.govinfo.gov
+    api_base: https://api.govinfo.gov
+    description: >-
+      Official GPO repository — U.S. Code, CFR, Federal Register and federal
+      court opinions. Free API key, issued instantly.
+    tags: [statutes, regulations, caselaw, official]
+    auth_note: Free API key, instant.
+
+  # ─────────────────────────────────────────────────────────────────────
+  # 2. California — the operative jurisdiction
+  # ─────────────────────────────────────────────────────────────────────
+  - slug: ca-leginfo
+    name: California Legislative Information
+    category: california
+    jurisdiction: CA
+    access: [web]
+    cost: free
+    auth: none
+    homepage: https://leginfo.legislature.ca.gov
+    description: >-
+      Official full text of every California code. Free, no account. The
+      authoritative source for the foreclosure sections in
+      `key_authorities` below.
+    tags: [statutes, foreclosure, mortgage]
+
+  - slug: ca-courts-opinions
+    name: California Courts — official opinions
+    category: california
+    jurisdiction: CA
+    access: [web]
+    cost: free
+    auth: none
+    homepage: https://www.courts.ca.gov/opinions
+    description: >-
+      Published and unpublished opinions from the California Supreme Court and
+      Courts of Appeal.
+    tags: [caselaw]
+
+  - slug: ca-dre
+    name: California DRE — license lookup
+    category: california
+    jurisdiction: CA
+    access: [web]
+    cost: free
+    auth: none
+    homepage: https://www.dre.ca.gov
+    phone: "877-373-4542"
+    description: >-
+      Verify whether a real estate broker or salesperson is licensed or has
+      been subject to disciplinary action. Shows license type, status,
+      expiration and disciplinary history. DRE also administers the Consumer
+      Recovery Account for consumers defrauded by a licensee.
+    tags: [licensing, broker, diligence, usury]
+    scope_warning: >-
+      This is where a broker's usury exemption is verified. Check status AS OF
+      THE CLOSING DATE, not today.
+
+  - slug: ca-dfpi
+    name: California DFPI — licensee search
+    category: california
+    jurisdiction: CA
+    access: [web]
+    cost: free
+    auth: none
+    homepage: https://dfpi.ca.gov
+    portal: https://docqnet.dfpi.ca.gov
+    description: >-
+      Self-service portal to search licensees, applicants and notice filers.
+      The California Financing Law requires licensing of finance lenders and
+      brokers making and brokering consumer and commercial loans, and provides
+      administrative, civil and criminal remedies for violations.
+    tags: [licensing, lender, diligence]
+
+  - slug: nmls-consumer-access
+    name: NMLS Consumer Access
+    category: california
+    jurisdiction: us
+    access: [web]
+    cost: free
+    auth: none
+    homepage: https://www.nmlsconsumeraccess.org
+    description: >-
+      Confirm that a financial-services company or professional is authorized
+      to do business in a state. Covers mortgage, consumer finance, debt and
+      money services companies, branches and individuals, and shows
+      disciplinary actions. Search by name, license number, city or ZIP.
+    tags: [licensing, lender, broker, diligence]
+    scope_warning: >-
+      Cross-check against DRE. California brokers may be licensed through DRE
+      or DFPI — separate regulators with different requirements.
+
+  - slug: ca-county-recorders
+    name: California County Recorders
+    category: california
+    jurisdiction: CA
+    access: [web]
+    cost: free
+    auth: none
+    description: >-
+      Free grantor/grantee search for recorded instruments — Notice of
+      Default, Notice of Trustee's Sale, deed of trust, assignment,
+      substitution of trustee, reconveyance. Do this before paying anyone for
+      a title search.
+    tags: [property, title, foreclosure, recorded_instruments]
+    endpoints:
+      - name: San Diego County
+        url: https://www.sdarcc.gov
+      - name: Orange County
+        url: https://www.ocrecorder.com
+      - name: Los Angeles County
+        url: https://www.lavote.gov
+
+  - slug: ca-superior-courts
+    name: California Superior Courts — case search
+    category: california
+    jurisdiction: CA
+    access: [web]
+    cost: free_tier
+    auth: none
+    description: >-
+      Each Superior Court runs its own portal. Free case-index search;
+      documents usually cost per page.
+    tags: [dockets, state_court]
+    endpoints:
+      - name: San Diego Superior Court
+        url: https://www.sdcourt.ca.gov
+      - name: Orange County Superior Court
+        url: https://www.occourts.org
+
+  - slug: ca-sos-business-search
+    name: California Secretary of State — business search
+    category: california
+    jurisdiction: CA
+    access: [web]
+    cost: free
+    auth: none
+    homepage: https://bizfileonline.sos.ca.gov
+    description: >-
+      Entity status, agent for service, and Statements of Information listing
+      officers. The fastest way to test whether two entities share principals.
+    tags: [entity, diligence, corporate]
+
+  # ─────────────────────────────────────────────────────────────────────
+  # 4. Non-profit legal resources
+  # ─────────────────────────────────────────────────────────────────────
+  - slug: free-law-project
+    name: Free Law Project
+    category: nonprofit
+    jurisdiction: us
+    access: [web, api, bulk]
+    cost: free
+    auth: none
+    homepage: https://free.law
+    description: >-
+      The leading non-profit using technology, data and advocacy to make the
+      legal ecosystem more equitable. Hosts open databases of opinions,
+      federal filings, judges, financial disclosures and oral arguments.
+      This is the organisation; its MCP surface and API live under the
+      `courtlistener` entry.
+    tags: [caselaw, nonprofit]
+
+  - slug: courtroom5
+    name: Courtroom5
+    category: nonprofit
+    jurisdiction: us
+    access: [mcp]
+    cost: free
+    auth: none
+    homepage: https://www.courtroom5.com
+    mcp_endpoint: https://mcp.courtroom5.com/v1
+    description: >-
+      Civil legal guidance built for self-represented litigants. Authless — no
+      signup at all. Tools for case intake assessment, deadline calculation
+      and next-step guidance. The deadline calculator is the practical one
+      when working against a sale date.
+    tags: [self_represented, deadlines, procedure]
+
+  - slug: lawhelp
+    name: LawHelp / LawHelpCA
+    category: nonprofit
+    jurisdiction: us
+    access: [web]
+    cost: free
+    auth: none
+    homepage: https://www.lawhelpca.org
+    description: >-
+      Legal aid referrals, self-help guides and plain-language explainers.
+    tags: [legal_aid, self_help]
+
+  - slug: ca-courts-selfhelp
+    name: California Courts Self-Help Center
+    category: nonprofit
+    jurisdiction: CA
+    access: [web]
+    cost: free
+    auth: none
+    homepage: https://selfhelp.courts.ca.gov
+    description: >-
+      Official court self-help — forms, procedures and plain-English guides to
+      civil process.
+    tags: [self_help, forms, procedure]
+
+  - slug: calbar-referral
+    name: State Bar of California — lawyer referral & discipline search
+    category: nonprofit
+    jurisdiction: CA
+    access: [web]
+    cost: free
+    auth: none
+    homepage: https://www.calbar.ca.gov
+    phone: "866-442-2529"
+    description: >-
+      Certified lawyer referral services, plus attorney discipline search —
+      check any lawyer before retaining.
+    tags: [referral, diligence, attorney]
+
+  - slug: legal-aid-socal
+    name: Legal Aid — Orange County / San Diego
+    category: nonprofit
+    jurisdiction: CA
+    access: [web]
+    cost: free
+    auth: none
+    description: >-
+      Income-qualified free representation. Housing and foreclosure are core
+      practice areas.
+    tags: [legal_aid, foreclosure, housing]
+    endpoints:
+      - name: Legal Aid Society of Orange County
+        url: https://www.legal-aid.com
+      - name: Legal Aid Society of San Diego
+        url: https://www.lassd.org
+
+  - slug: caselaw-access-project
+    name: Caselaw Access Project (Harvard)
+    category: nonprofit
+    jurisdiction: us
+    access: [bulk, api]
+    cost: free
+    auth: none
+    homepage: https://case.law
+    bulk_url: https://static.case.law
+    description: >-
+      All official, book-published state and federal United States case law,
+      digitized from the Harvard Law Library collection — roughly seven
+      million cases across about 360 years. Now distributed as static files;
+      CourtListener has absorbed much of the live search. Best for bulk
+      analysis and historical opinions.
+    tags: [caselaw, bulk, historical]
+
+  - slug: hud-housing-counseling
+    name: HUD-Approved Housing Counseling
+    category: nonprofit
+    jurisdiction: federal
+    access: [web]
+    cost: free
+    auth: none
+    homepage: https://www.hud.gov/findacounselor
+    phone: "800-569-4287"
+    description: >-
+      Free, federally certified housing counselling.
+    tags: [foreclosure, counselling, housing]
+    scope_warning: >-
+      If anyone charges an advance fee for foreclosure help in California,
+      that is illegal under Cal. Civ. Code § 2945.
+
+  # ─────────────────────────────────────────────────────────────────────
+  # 5. General courts, caselaw & litigation
+  # ─────────────────────────────────────────────────────────────────────
+  - slug: courtlistener
+    name: CourtListener
+    category: courts_caselaw
+    jurisdiction: us
+    access: [mcp, web, api, bulk]
+    cost: free_tier
+    auth: oauth
+    homepage: https://www.courtlistener.com
+    api_base: https://www.courtlistener.com/api/rest/v4
+    mcp_endpoint: https://mcp.courtlistener.com
+    description: >-
+      Start here. Roughly eight million opinions covering SCOTUS, all federal
+      circuit and district courts, every state supreme and appellate court and
+      a growing pool of state trial courts; over nine million decisions from
+      more than 2,000 courts; the RECAP Archive of federal filings; 3.4M+
+      minutes of oral argument; data on 16,191 judges; and financial
+      disclosures. Semantic search was added to the search API in Nov 2025.
+    tags: [caselaw, dockets, judges, recap, primary]
+    implemented: true
+    client: CourtListenerClient
+    rate_limits: >-
+      As of May 2026 higher rate limits sit behind membership tiers; a free
+      account gets 5 requests/minute, 50/hour and 125/day. Student and
+      academic memberships are free and raise those limits. Verify current
+      terms at the source.
+    notes: >-
+      Every document already in the RECAP Archive is free permanently with no
+      account required — where PACER charges $0.10/page, CourtListener charges
+      nothing. Check RECAP before paying PACER.
+
+  - slug: google-scholar-caselaw
+    name: Google Scholar — Case Law
+    category: courts_caselaw
+    jurisdiction: us
+    access: [web]
+    cost: free
+    auth: none
+    homepage: https://scholar.google.com
+    description: >-
+      Free full-text case law search, no account. "How cited" is the poor
+      man's citator — the best free way to check whether a case is still good
+      law.
+    tags: [caselaw, citator]
+
+  - slug: justia
+    name: Justia
+    category: courts_caselaw
+    jurisdiction: us
+    access: [web]
+    cost: free
+    auth: none
+    homepage: https://law.justia.com
+    description: >-
+      Free case law, statutes by state, regulations and dockets. Clean and
+      reliable.
+    tags: [caselaw, statutes, state_law]
+
+  - slug: govinfo-uscourts
+    name: GovInfo — U.S. Courts Opinions
+    category: courts_caselaw
+    jurisdiction: federal
+    access: [web, api, bulk]
+    cost: free
+    auth: api_key
+    homepage: https://www.govinfo.gov/app/collection/uscourts
+    description: >-
+      Appellate, district, bankruptcy and Court of International Trade
+      opinions, generally back to 2004. Official GPO source.
+    tags: [caselaw, official, federal]
+
+  - slug: descrybe
+    name: Descrybe Legal Engine
+    category: courts_caselaw
+    jurisdiction: us
+    access: [mcp]
+    cost: free_tier
+    auth: oauth
+    homepage: https://descrybe.ai
+    mcp_endpoint: https://mcp.descrybe.com/mcp
+    description: >-
+      AI-summarized U.S. primary law with a free tier. Concept search,
+      case-text search, citation extraction and PDF retrieval. Good for rapid
+      orientation on unfamiliar doctrine.
+    tags: [caselaw, ai_summary]
+
+  - slug: legal-data-hunter
+    name: Legal Data Hunter
+    category: courts_caselaw
+    jurisdiction: international
+    access: [mcp]
+    cost: free_tier
+    auth: oauth
+    homepage: https://legaldatahunter.com
+    mcp_endpoint: https://legaldatahunter.com/mcp
+    description: >-
+      23M+ legal documents across 160+ jurisdictions. Useful when the question
+      spans countries.
+    tags: [multi_jurisdiction, international]
+
+  - slug: pacer
+    name: PACER
+    category: courts_caselaw
+    jurisdiction: federal
+    access: [web, api]
+    cost: paid
+    auth: account
+    homepage: https://pacer.uscourts.gov
+    description: >-
+      Official federal court records. $0.10/page, capped at $3.00 per
+      document, and fees are waived if you accrue under $30 in a quarter — so
+      light use is effectively free. Self-serve registration.
+    tags: [dockets, federal, filings]
+    notes: >-
+      Check CourtListener's RECAP archive first. Anything already there costs
+      nothing.
+
+  - slug: unicourt-trellis
+    name: UniCourt / Trellis
+    category: courts_caselaw
+    jurisdiction: us
+    access: [web, api]
+    cost: free_tier
+    auth: account
+    description: >-
+      State trial court records including California Superior Courts —
+      coverage CourtListener is still thin on. Both have free search tiers
+      with self-serve paid upgrades.
+    tags: [state_court, dockets]
+    endpoints:
+      - name: UniCourt
+        url: https://unicourt.com
+      - name: Trellis
+        url: https://trellis.law
+
+  - slug: law-library-guides
+    name: Institutional research guides
+    category: courts_caselaw
+    jurisdiction: us
+    access: [web]
+    cost: free
+    auth: none
+    description: >-
+      Maintained by law librarians — the best meta-resource when you need
+      something not in this registry.
+    tags: [reference, meta]
+    endpoints:
+      - name: Harvard Library — free legal research
+        url: https://guides.library.harvard.edu/law/free
+      - name: Library of Congress — free case law
+        url: https://guides.loc.gov/free-case-law
+
+  # ─────────────────────────────────────────────────────────────────────
+  # 6. Banking, lending & financial data
+  # ─────────────────────────────────────────────────────────────────────
+  - slug: ffiec
+    name: FFIEC
+    category: banking_finance
+    jurisdiction: federal
+    access: [web, api, bulk]
+    cost: free
+    auth: none
+    homepage: https://www.ffiec.gov
+    api_base: https://ffiec.cfpb.gov/v2
+    description: >-
+      HMDA data, Call Reports, CRA performance evaluations and institution
+      search. Public API endpoints available without authentication.
+    tags: [hmda, mortgage, banking, lender_diligence]
+
+  - slug: fdic-bankfind
+    name: FDIC BankFind
+    category: banking_finance
+    jurisdiction: federal
+    access: [web, api]
+    cost: free
+    auth: none
+    homepage: https://banks.data.fdic.gov/docs
+    api_base: https://api.fdic.gov/banks
+    description: >-
+      Every FDIC-insured institution — financials, branches, history and
+      enforcement actions. Free REST API, no key.
+    tags: [banking, lender_diligence, enforcement]
+    implemented: true
+    client: FDICBankFindClient
+
+  - slug: ncua
+    name: NCUA
+    category: banking_finance
+    jurisdiction: federal
+    access: [web, bulk]
+    cost: free
+    auth: none
+    homepage: https://www.ncua.gov
+    description: >-
+      Credit union equivalent of FDIC BankFind. Call report data downloadable.
+    tags: [credit_union, banking]
+
+  - slug: fred
+    name: FRED — Federal Reserve Bank of St. Louis
+    category: banking_finance
+    jurisdiction: federal
+    access: [web, api, bulk]
+    cost: free
+    auth: api_key
+    homepage: https://fred.stlouisfed.org
+    api_base: https://api.stlouisfed.org/fred
+    description: >-
+      800,000+ economic series including mortgage rates, delinquency rates and
+      house price indices. Free API key, instant, no approval.
+    tags: [rates, mortgage, economic_data]
+    auth_note: Free API key, instant, no approval step.
+    series_of_interest:
+      - "MORTGAGE30US — 30-year fixed mortgage average"
+      - "DRSFRMACBS — single-family residential delinquency rate"
+      - "CSUSHPINSA — Case-Shiller national home price index"
+
+  - slug: sec-edgar
+    name: SEC EDGAR
+    category: banking_finance
+    jurisdiction: federal
+    access: [web, api, bulk]
+    cost: free
+    auth: none
+    homepage: https://www.sec.gov/edgar
+    api_base: https://data.sec.gov
+    description: >-
+      Full-text search across all SEC filings. Free API, no key. Useful for
+      checking whether a lender or fund has securities filings, or for finding
+      a Form D from a private fund.
+    tags: [securities, lender_diligence, entity]
+    notes: >-
+      SEC requires a descriptive User-Agent header identifying the requester;
+      requests without one are rejected.
+
+  - slug: occ-fed-treasury
+    name: Treasury / OCC / Federal Reserve
+    category: banking_finance
+    jurisdiction: federal
+    access: [web]
+    cost: free
+    auth: none
+    description: >-
+      OCC enforcement actions searchable by institution; Federal Reserve
+      supervisory guidance.
+    tags: [enforcement, supervision, lender_diligence]
+    endpoints:
+      - name: OCC enforcement actions
+        url: https://www.occ.gov
+      - name: Federal Reserve supervision & regulation
+        url: https://www.federalreserve.gov/supervisionreg
+
+  - slug: financial-modeling-prep
+    name: Financial Modeling Prep
+    category: banking_finance
+    jurisdiction: us
+    access: [mcp, api]
+    cost: free_tier
+    auth: oauth
+    homepage: https://financialmodelingprep.com
+    mcp_endpoint: https://financialmodelingprep.com/mcp
+    description: >-
+      Market data with a free tier and self-serve paid plans. General finance
+      rather than mortgage-specific.
+    tags: [market_data]
+
+  - slug: quickbooks
+    name: QuickBooks
+    category: banking_finance
+    jurisdiction: us
+    access: [mcp]
+    cost: paid
+    auth: none
+    mcp_endpoint: https://ai-inc.quickbooks.intuit.com/v1/mcp
+    description: >-
+      Connect your own financial data. Authless if you already have an
+      account. Relevant for assembling financial statements a lender will ask
+      for.
+    tags: [own_financials]
+    auth_note: No separate auth, but requires an existing QuickBooks account.
+
+  # ─────────────────────────────────────────────────────────────────────
+  # 7. Property records & title
+  # ─────────────────────────────────────────────────────────────────────
+  - slug: ca-county-assessors
+    name: California County Assessors & Tax Collectors
+    category: property_title
+    jurisdiction: CA
+    access: [web]
+    cost: free
+    auth: none
+    description: >-
+      Assessed value, ownership history, recorded documents and tax status.
+      Free in most California counties.
+    tags: [property, tax, title]
+    endpoints:
+      - name: San Diego Treasurer-Tax Collector
+        url: https://www.sdttc.com
+      - name: Orange County Treasurer-Tax Collector
+        url: https://www.octreasurer.com
+
+  - slug: fema-flood-maps
+    name: FEMA Flood Map Service Center
+    category: property_title
+    jurisdiction: federal
+    access: [web, api]
+    cost: free
+    auth: none
+    homepage: https://msc.fema.gov
+    description: >-
+      Free flood zone determination — lenders will ask.
+    tags: [property, flood, underwriting]
+
+  - slug: epa-enviro
+    name: EPA EnviroMapper / NEPAssist
+    category: property_title
+    jurisdiction: federal
+    access: [web]
+    cost: free
+    auth: none
+    homepage: https://www.epa.gov/enviro
+    description: >-
+      Environmental screening for commercial property. Useful before a Phase I
+      is ordered.
+    tags: [property, environmental, commercial]
+
+  - slug: census-acs
+    name: Census / American Community Survey
+    category: property_title
+    jurisdiction: federal
+    access: [web, api]
+    cost: free
+    auth: api_key
+    homepage: https://api.census.gov
+    api_base: https://api.census.gov/data
+    description: >-
+      Demographics and housing data by tract. Free key, instant.
+    tags: [demographics, housing_data]
+
+  - slug: regrid-attom
+    name: Regrid / ATTOM
+    category: property_title
+    jurisdiction: us
+    access: [web, api]
+    cost: free_tier
+    auth: account
+    description: >-
+      Nationwide parcel data. Regrid has genuine self-serve pricing. ATTOM is
+      more comprehensive but leans enterprise — check before engaging.
+    tags: [parcel, property]
+    endpoints:
+      - name: Regrid
+        url: https://regrid.com
+      - name: ATTOM Data
+        url: https://www.attomdata.com
+
+  # ─────────────────────────────────────────────────────────────────────
+  # 3. Cross-state comparison aids
+  # ─────────────────────────────────────────────────────────────────────
+  - slug: nolo-foreclosure
+    name: Nolo — state foreclosure guides
+    category: state_law
+    jurisdiction: us
+    access: [web]
+    cost: free
+    auth: none
+    homepage: https://www.nolo.com
+    description: >-
+      Free, accurate, state-by-state foreclosure pages. The best plain-English
+      starting point before reading the statute itself.
+    tags: [foreclosure, state_law, plain_english]
+
+  - slug: nclc
+    name: National Consumer Law Center
+    category: state_law
+    jurisdiction: us
+    access: [web]
+    cost: free_tier
+    auth: none
+    homepage: https://www.nclc.org
+    description: >-
+      Free issue briefs; treatises are paid but purchasable online without a
+      sales call.
+    tags: [consumer_protection, foreclosure, treatise]
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# California foreclosure authorities
+#
+# The statutory spine of a California foreclosure. Authoritative text lives at
+# `ca-leginfo`. Structured here (rather than as prose) so it can seed an
+# authority corpus and be resolved against citations extracted from documents.
+# ─────────────────────────────────────────────────────────────────────────
+key_authorities:
+  - citation: "Cal. Civ. Code § 2899"
+    subject: Marshalling of assets — order in which liens are satisfied
+    source: ca-leginfo
+  - citation: "Cal. Civ. Code § 2924"
+    subject: Nonjudicial foreclosure procedure
+    source: ca-leginfo
+  - citation: "Cal. Civ. Code § 2924b"
+    subject: Notice requirements
+    source: ca-leginfo
+  - citation: "Cal. Civ. Code § 2924c"
+    subject: Reinstatement — cure rights and the 5-business-day cutoff
+    source: ca-leginfo
+  - citation: "Cal. Civ. Code § 2924f"
+    subject: Notice of sale requirements
+    source: ca-leginfo
+  - citation: "Cal. Civ. Code § 2924g"
+    subject: Postponement of sale
+    source: ca-leginfo
+  - citation: "Cal. Civ. Code § 2941"
+    subject: Reconveyance obligation after payoff, with statutory damages
+    source: ca-leginfo
+  - citation: "Cal. Civ. Code § 2943"
+    subject: Payoff demand statements — what a lender must provide, and when
+    source: ca-leginfo
+  - citation: "Cal. Civ. Code § 1671"
+    subject: Liquidated damages — the penalty analysis for default rates
+    source: ca-leginfo
+  - citation: "Cal. Civ. Code § 1695"
+    subject: Home equity sales contracts (property in foreclosure)
+    source: ca-leginfo
+  - citation: "Cal. Civ. Code § 2945"
+    subject: Foreclosure consultants — advance-fee prohibition
+    source: ca-leginfo
+  - citation: "Cal. Civ. Proc. Code § 580a"
+    subject: Anti-deficiency — fair value limitation after trustee's sale
+    source: ca-leginfo
+  - citation: "Cal. Civ. Proc. Code § 580b"
+    subject: Anti-deficiency — purchase-money protection
+    source: ca-leginfo
+  - citation: "Cal. Civ. Proc. Code § 580d"
+    subject: Anti-deficiency — no deficiency after nonjudicial sale
+    source: ca-leginfo
+  - citation: "Cal. Civ. Proc. Code § 726"
+    subject: One-action rule
+    source: ca-leginfo
+  - citation: "Cal. Bus. & Prof. Code § 10240"
+    subject: Mortgage Loan Disclosure Statement
+    source: ca-leginfo
+  - citation: "Cal. Bus. & Prof. Code § 10229"
+    subject: Multi-lender / fractionalized note rules
+    source: ca-leginfo
+  - citation: "Cal. Bus. & Prof. Code § 10238"
+    subject: Multi-lender / fractionalized note rules
+    source: ca-leginfo
+  - citation: "Cal. Fin. Code § 22000 et seq."
+    subject: California Financing Law
+    source: ca-leginfo
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# State foreclosure process
+#
+# Foreclosure is state law and the differences are large. The single most
+# important distinction is judicial vs. nonjudicial.
+# ─────────────────────────────────────────────────────────────────────────
+state_foreclosure:
+  - state: CA
+    name: California
+    process: nonjudicial
+    statutes_url: https://leginfo.legislature.ca.gov
+    notes: ~4 months minimum; strong anti-deficiency protection.
+  - state: TX
+    name: Texas
+    process: nonjudicial
+    statutes_url: https://statutes.capitol.texas.gov
+    notes: Very fast — 21-day notice, first-Tuesday sales.
+  - state: NY
+    name: New York
+    process: judicial
+    statutes_url: https://www.nysenate.gov/legislation
+    notes: Slow; mandatory settlement conferences.
+  - state: FL
+    name: Florida
+    process: judicial
+    statutes_url: http://www.leg.state.fl.us/statutes
+    notes: Chapter 702; contested cases run long.
+  - state: IL
+    name: Illinois
+    process: judicial
+    statutes_url: https://www.ilga.gov/legislation/ilcs
+    notes: Statutory redemption period.
+  - state: AZ
+    name: Arizona
+    process: nonjudicial
+    statutes_url: https://www.azleg.gov/arstitle
+    notes: ~90 days; deed of trust state.
+  - state: NV
+    name: Nevada
+    process: nonjudicial
+    statutes_url: https://www.leg.state.nv.us/nrs
+    notes: Mediation program for residential.
+  - state: WA
+    name: Washington
+    process: nonjudicial
+    statutes_url: https://app.leg.wa.gov/rcw
+    notes: ~120 days.
+  - state: GA
+    name: Georgia
+    process: nonjudicial
+    statutes_url: https://www.legis.ga.gov
+    notes: Very fast; advertise 4 weeks.
+  - state: MA
+    name: Massachusetts
+    process: nonjudicial
+    statutes_url: https://malegislature.gov/laws
+    notes: Strict notice compliance.
+  - state: NJ
+    name: New Jersey
+    process: judicial
+    statutes_url: https://www.njleg.state.nj.us
+    notes: Among the slowest in the country.
+  - state: PA
+    name: Pennsylvania
+    process: judicial
+    statutes_url: https://www.legis.state.pa.us
+    notes: Act 91 notice required.
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Excluded — demo funnel or firm-priced
+#
+# Recorded so the exclusion decision is visible and not silently revisited.
+# ─────────────────────────────────────────────────────────────────────────
+excluded:
+  - name: CoCounsel Legal (Thomson Reuters)
+    reason: Enterprise sales process; Westlaw-tier pricing.
+  - name: Midpage Legal Research
+    reason: Firm-priced, sales-led onboarding.
+  - name: Lexis+ / Westlaw Edge
+    reason: Contract sales only; no self-serve.
+  - name: Bloomberg Law
+    reason: Enterprise contract.
+  - name: Jus Mundi
+    reason: Arbitration focus; sales-led.
+  - name: CoreLogic / Black Knight
+    reason: Enterprise real estate data; demo required.
+  - name: FactSet
+    reason: Institutional financial data; enterprise only.
+  - name: LegalZoom (MCP)
+    reason: >-
+      Paid attorney-consultation booking rather than a research source.
+      Reachable at legalzoom.com/mcp/claude/v1 if wanted.
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Caveats that travel with this registry
+# ─────────────────────────────────────────────────────────────────────────
+caveats:
+  - id: verify_before_relying
+    text: >-
+      Rate limits, free tiers and coverage change. Everything here was checked
+      in July 2026; confirm current terms at the source.
+  - id: not_legal_advice
+    text: >-
+      Free research is not legal advice. These tools make you a better-informed
+      client; they do not replace a licensed attorney, and in a time-critical
+      matter the attorney is the first priority.
+  - id: consumer_vs_commercial
+    text: >-
+      Federal consumer-mortgage rules (TILA, RESPA, HMDA) generally do not
+      reach business-purpose commercial loans. Reading a consumer-protection
+      statute and assuming it applies to a commercial deed of trust is the most
+      common self-research error.
+  - id: as_of_date
+    text: >-
+      Licensing status, statutory text and regulations all change. What matters
+      is usually the law and the licence as they stood on the closing date, not
+      today.
