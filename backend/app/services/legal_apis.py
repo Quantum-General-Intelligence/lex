@@ -263,13 +263,200 @@ class CourtListenerClient:
         return case_name
 
 
+class FederalRegisterClient:
+    """Client for the Federal Register API.
+
+    Proposed and final rules from every federal agency. No API key required.
+    The agency filter is the useful one for mortgage work — CFPB, FHFA, HUD
+    and OCC rulemaking is where Reg X and Reg Z actually change.
+    """
+
+    BASE_URL = "https://www.federalregister.gov/api/v1"
+
+    # Agency slugs as the API expects them, for the regulators that matter here.
+    MORTGAGE_AGENCIES = [
+        "consumer-financial-protection-bureau",
+        "federal-housing-finance-agency",
+        "housing-and-urban-development-department",
+        "comptroller-of-the-currency",
+    ]
+
+    def __init__(self):
+        self.client = httpx.AsyncClient(timeout=30.0)
+
+    async def search_documents(
+        self,
+        query: str,
+        agencies: list[str] | None = None,
+        document_type: str | None = None,
+        per_page: int = 20,
+    ) -> list[dict]:
+        """Search Federal Register documents.
+
+        ``document_type`` accepts the API's single-letter codes — RULE,
+        PRORULE, NOTICE, PRESDOCU.
+        """
+        try:
+            params: list[tuple[str, str]] = [
+                ("conditions[term]", query),
+                ("per_page", str(min(per_page, 1000))),
+                ("order", "relevance"),
+            ]
+            for field in (
+                "title",
+                "abstract",
+                "document_number",
+                "publication_date",
+                "type",
+                "agencies",
+                "html_url",
+                "citation",
+            ):
+                params.append(("fields[]", field))
+            for agency in agencies or []:
+                params.append(("conditions[agencies][]", agency))
+            if document_type:
+                params.append(("conditions[type][]", document_type))
+
+            response = await self.client.get(
+                f"{self.BASE_URL}/documents.json", params=params
+            )
+            response.raise_for_status()
+            return response.json().get("results", [])
+        except Exception as e:
+            logger.error(f"Federal Register search failed: {e}")
+            return []
+
+    async def search_mortgage_rulemaking(
+        self, query: str, per_page: int = 20
+    ) -> list[dict]:
+        """Search rulemaking from the mortgage-relevant regulators only."""
+        return await self.search_documents(
+            query, agencies=self.MORTGAGE_AGENCIES, per_page=per_page
+        )
+
+
+class CFPBComplaintsClient:
+    """Client for the CFPB Consumer Complaint Database. No API key required.
+
+    Scope trap: HMDA and most CFPB consumer rules cover *consumer* mortgages.
+    A business-purpose commercial loan generally falls outside them, so a hit
+    here does not by itself establish that a rule applies to a given loan.
+    """
+
+    BASE_URL = (
+        "https://www.consumerfinance.gov/data-research/consumer-complaints/search/api/v1"
+    )
+
+    def __init__(self):
+        self.client = httpx.AsyncClient(timeout=30.0)
+
+    async def search_complaints(
+        self,
+        company: str | None = None,
+        search_term: str | None = None,
+        product: str | None = "Mortgage",
+        state: str | None = None,
+        limit: int = 20,
+    ) -> dict:
+        """Search consumer complaints, defaulting to the Mortgage product.
+
+        Returns ``{"total": int, "complaints": [...]}``. ``total`` is the full
+        match count, not the page size — for lender diligence the volume of
+        complaints against a company is the signal, so it is reported even
+        though only ``limit`` records come back.
+
+        Note: do NOT pass ``format=json``. That switches the endpoint into
+        export mode, which ignores ``size`` and returns every match (tens of
+        thousands of records for a common term).
+        """
+        try:
+            params: dict = {"size": min(limit, 100), "no_aggs": "true"}
+            if company:
+                params["company"] = company
+            if search_term:
+                params["search_term"] = search_term
+            if product:
+                params["product"] = product
+            if state:
+                params["state"] = state
+
+            response = await self.client.get(f"{self.BASE_URL}/", params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            hits_envelope = data.get("hits", {}) if isinstance(data, dict) else {}
+            hits = hits_envelope.get("hits", [])
+
+            # total is {"value": n, "relation": "eq"} on current Elasticsearch,
+            # a bare int on older responses.
+            raw_total = hits_envelope.get("total", 0)
+            total = (
+                raw_total.get("value", 0)
+                if isinstance(raw_total, dict)
+                else int(raw_total or 0)
+            )
+
+            return {
+                "total": total,
+                "complaints": [hit.get("_source", hit) for hit in hits],
+            }
+        except Exception as e:
+            logger.error(f"CFPB complaint search failed: {e}")
+            return {"total": 0, "complaints": []}
+
+
+class FDICBankFindClient:
+    """Client for the FDIC BankFind API. No API key required.
+
+    Used for lender diligence — whether an institution is FDIC-insured, its
+    status, and its history.
+    """
+
+    # banks.data.fdic.gov/api now 301-redirects here; point at the live host
+    # directly rather than relying on redirect following.
+    BASE_URL = "https://api.fdic.gov/banks"
+
+    def __init__(self):
+        self.client = httpx.AsyncClient(timeout=30.0, follow_redirects=True)
+
+    async def search_institutions(self, name: str, limit: int = 20) -> list[dict]:
+        """Search FDIC-insured institutions by name."""
+        try:
+            response = await self.client.get(
+                f"{self.BASE_URL}/institutions",
+                params={
+                    "search": f"NAME:{name}",
+                    "fields": "NAME,CITY,STALP,ACTIVE,CERT,ESTYMD,ENDEFYMD,WEBADDR",
+                    "limit": min(limit, 100),
+                    "format": "json",
+                },
+            )
+            response.raise_for_status()
+            data = response.json()
+            # BankFind wraps each record as {"data": {...}, "score": n}
+            return [row.get("data", {}) for row in data.get("data", [])]
+        except Exception as e:
+            logger.error(f"FDIC BankFind search failed: {e}")
+            return []
+
+
 class LegalDataService:
-    """Unified service for fetching legal data from multiple sources."""
+    """Unified service for fetching legal data from multiple sources.
+
+    The clients here are the subset of the source registry
+    (``app/data/legal_sources.yaml``) that has a working implementation. Most
+    registry entries are browser-only and deliberately have no client — see
+    that file for the full catalogue.
+    """
 
     def __init__(self):
         self.ecfr = ECFRClient()
         self.congress = CongressClient()
         self.courtlistener = CourtListenerClient()
+        self.federal_register = FederalRegisterClient()
+        self.cfpb = CFPBComplaintsClient()
+        self.fdic = FDICBankFindClient()
 
     async def search_regulations(
         self,
@@ -351,6 +538,40 @@ class LegalDataService:
             for o in opinions
         ]
 
+    async def search_rulemaking(
+        self,
+        query: str,
+        mortgage_only: bool = False,
+        limit: int = 20,
+    ) -> list[dict]:
+        """Search agency rulemaking in the Federal Register."""
+        if mortgage_only:
+            documents = await self.federal_register.search_mortgage_rulemaking(
+                query, per_page=limit
+            )
+        else:
+            documents = await self.federal_register.search_documents(
+                query, per_page=limit
+            )
+        return [
+            {
+                "source": "federal_register",
+                "type": "Regulation",
+                "title": d.get("title", ""),
+                "citation": d.get("citation") or d.get("document_number", ""),
+                "text": d.get("abstract") or "",
+                "url": d.get("html_url"),
+                "metadata": {
+                    "document_type": d.get("type"),
+                    "publication_date": d.get("publication_date"),
+                    "agencies": [
+                        a.get("name") for a in d.get("agencies", []) if isinstance(a, dict)
+                    ],
+                },
+            }
+            for d in documents
+        ]
+
     async def search_all(
         self,
         query: str,
@@ -363,6 +584,7 @@ class LegalDataService:
             self.search_regulations(query, limit=limit_per_source),
             self.search_statutes(query, limit=limit_per_source),
             self.search_case_law(query, limit=limit_per_source),
+            self.search_rulemaking(query, limit=limit_per_source),
             return_exceptions=True,
         )
 
@@ -370,6 +592,7 @@ class LegalDataService:
             "regulations": results[0] if not isinstance(results[0], Exception) else [],
             "statutes": results[1] if not isinstance(results[1], Exception) else [],
             "case_law": results[2] if not isinstance(results[2], Exception) else [],
+            "rulemaking": results[3] if not isinstance(results[3], Exception) else [],
         }
 
     async def import_regulation(self, title: int, part: int, section: str | None = None) -> dict:
